@@ -1,0 +1,37 @@
+{
+  "common": {
+    "continue": "Continue",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "cta": "Login",
+    "noAccount": "Create account"
+  },
+  "register": {
+    "title": "Create account",
+    "cta": "Continue"
+  },
+  "subscription": {
+    "title": "Choose your plan",
+    "essential": "Essential",
+    "premium": "Premium",
+    "trial": "7-day free trial"
+  },
+  "home": {
+    "title": "Upcoming Events"
+  },
+  "events": {
+    "book": "Book"
+  },
+  "chats": {
+    "title": "Chats"
+  },
+  "profile": {
+    "title": "Profile",
+    "settings": "Settings"
+  }
+}

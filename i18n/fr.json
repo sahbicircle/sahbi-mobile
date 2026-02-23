@@ -1,0 +1,37 @@
+{
+  "common": {
+    "continue": "Continuer",
+    "confirm": "Confirmer",
+    "cancel": "Annuler"
+  },
+  "login": {
+    "title": "Connexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "cta": "Se connecter",
+    "noAccount": "Créer un compte"
+  },
+  "register": {
+    "title": "Créer un compte",
+    "cta": "Continuer"
+  },
+  "subscription": {
+    "title": "Choisissez votre abonnement",
+    "essential": "Essentiel",
+    "premium": "Premium",
+    "trial": "7 jours d’essai gratuit"
+  },
+  "home": {
+    "title": "Événements à venir"
+  },
+  "events": {
+    "book": "Réserver"
+  },
+  "chats": {
+    "title": "Discussions"
+  },
+  "profile": {
+    "title": "Profil",
+    "settings": "Paramètres"
+  }
+}
