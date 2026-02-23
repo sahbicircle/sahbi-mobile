@@ -12,6 +12,7 @@ const profileRoutes = require("./routes/profile");
 const subscriptionRoutes = require("./routes/subscriptions");
 const trustRoutes = require("./routes/trust");
 const facialRoutes = require("./routes/facial");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/trust", trustRoutes);
 app.use("/api/facial", facialRoutes);
+app.use("/api/admin", adminRoutes);
 
 // MongoDB Connection
 mongoose

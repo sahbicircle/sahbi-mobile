@@ -16,6 +16,7 @@ const buildUserResponse = (user) => ({
   email: user.email,
   photoUrl: Array.isArray(user.photoUrl) ? user.photoUrl : (user.photoUrl ? [user.photoUrl] : []),
   trustScore: user.trustScore,
+  role: user.role || "user",
 });
 
 function normalizePhone(phone) {

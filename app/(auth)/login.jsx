@@ -42,6 +42,7 @@ export default function Login() {
       setError("");
 
       const res = await login(email, password);
+      await setAuth(res.user, res.token);
       const fullProfile = await getProfile();
       await setAuth(fullProfile, res.token);
       router.replace("/(tabs)/home");
