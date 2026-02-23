@@ -84,7 +84,8 @@ export default function Register() {
       case 2:
         return form.email && isStrongPassword(form.password);
       case 3:
-        return isValidPhone(form.phoneNumber) && (form.phoneVerified || form.skippedPhoneVerification);
+        return isValidPhone(form.phoneNumber);
+        // &&(form.phoneVerified || form.skippedPhoneVerification)
       case 4:
         return !!form.birthday;
       case 5:
@@ -516,7 +517,7 @@ export default function Register() {
                         setOtpLoading(false);
                       }
                     }}
-                    disabled={!isValidPhone(form.phoneNumber) || otpLoading}
+                    disabled //={!isValidPhone(form.phoneNumber) || otpLoading}
                   />
                 ) : (
                   <>
@@ -562,14 +563,14 @@ export default function Register() {
                 {otpError ? (
                   <Text style={[styles.errorText, { marginTop: 8 }]}>{otpError}</Text>
                 ) : null}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   onPress={() => update("skippedPhoneVerification", true)}
                   style={{ alignSelf: "center", marginTop: 16 }}
                 >
                   <Text style={[styles.link, { fontSize: 14 }]}>
                     {t("register.phone.skipForNow", "Skip for now")}
                   </Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </>
             ) : (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
