@@ -1,10 +1,13 @@
+import { usePaymentSheet } from "../../lib/stripe";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import Subscription from "../(auth)/subscription";
 import { createBooking } from "../../services/booking.service";
+import { createTicketPaymentIntent } from "../../services/payment.service";
+import { getEventById } from "../../services/event.service";
+import { useAuth } from "../../hooks/useAuth";
 import { styles } from "./booking-confirmation.styles";
 
 const Option = ({ label, selected, onPress }) => (
@@ -19,14 +22,26 @@ const Option = ({ label, selected, onPress }) => (
   </TouchableOpacity>
 );
 
-export default function BookingConfirmation({ event }) {
+const hasActiveSubscription = (sub) =>
+  sub === "Premium" || sub === "Essential";
+
+export default function BookingConfirmation() {
   const router = useRouter();
   const { eventId } = useLocalSearchParams();
+  const { user } = useAuth();
+  const { initPaymentSheet, presentPaymentSheet } = usePaymentSheet();
 
+  const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [step, setStep] = useState(0);
+  const [ticketTab, setTicketTab] = useState("subscription");
 
-  const confirm = async () => {
+  useEffect(() => {
+    if (eventId) getEventById(eventId).then(setEvent).catch(console.error);
+  }, [eventId]);
+
+  const confirmSubscription = async () => {
     if (!eventId) return;
     try {
       setLoading(true);
@@ -35,14 +50,66 @@ export default function BookingConfirmation({ event }) {
       router.replace("/events/booking-success");
     } catch (err) {
       console.error("Booking error:", err);
-      setError("Failed to create booking. Please try again.");
+      setError(err?.response?.data?.message || "Failed to create booking. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const [step, setStep] = useState(0);
-  const [ticketTab, setTicketTab] = useState("subscription");
+  const confirmOneTicket = async () => {
+    if (!eventId || !event) return;
+    try {
+      setLoading(true);
+      setError("");
+      const { clientSecret, paymentIntentId: piId, free } =
+        await createTicketPaymentIntent(eventId);
+
+      if (free || !clientSecret) {
+        await createBooking(eventId);
+        router.replace("/events/booking-success");
+        return;
+      }
+
+      const { error: initErr } = await initPaymentSheet({
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: "Sahbi",
+        returnURL: "sahbimobile://stripe-redirect",
+        applePay: { merchantCountryCode: "MA" },
+        googlePay: {
+          merchantCountryCode: "MA",
+          testEnv: __DEV__,
+        },
+      });
+      if (initErr) {
+        setError(initErr.message || "Failed to initialize payment");
+        return;
+      }
+
+      const { error: presentErr } = await presentPaymentSheet();
+      if (presentErr) {
+        if (presentErr.code !== "Canceled") {
+          setError(presentErr.message || "Payment failed");
+        }
+        return;
+      }
+
+      await createBooking(eventId, piId);
+      router.replace("/events/booking-success");
+    } catch (err) {
+      console.error("Payment error:", err);
+      setError(err?.response?.data?.message || err?.message || "Payment failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirm = async () => {
+    if (ticketTab === "subscription") {
+      await confirmSubscription();
+    } else {
+      await confirmOneTicket();
+    }
+  };
   const [form, setForm] = useState({
     language: "",
     dinner: "",
@@ -160,11 +227,23 @@ export default function BookingConfirmation({ event }) {
           {/* Tab Content */}
           {ticketTab === "subscription" ? (
             <View style={styles.tabContent}>
-              <Subscription fromTicket />
+              {hasActiveSubscription(user?.subscription) ? (
+                <Text style={styles.tabDescription}>
+                  This event is included with your {user?.subscription} subscription.
+                </Text>
+              ) : (
+                <Text style={styles.tabDescription}>
+                  Subscribe to get access to all events. Or use One Ticket to pay for this event only.
+                </Text>
+              )}
             </View>
           ) : (
             <View style={styles.tabContent}>
-              <Text>Get a single ticket for this event.</Text>
+              <Text style={styles.tabDescription}>
+                {(event?.price ?? 0) > 0
+                  ? `Pay ${event.price} MAD for this event. Apple Pay & Google Pay accepted.`
+                  : "This event is free. Confirm to book."}
+              </Text>
             </View>
           )}
         </View>
@@ -172,8 +251,22 @@ export default function BookingConfirmation({ event }) {
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <GradientButton
-        onPress={step === 0 ? next : confirm}
-        label={loading ? "Please wait..." : step === 0 ? "Next" : "Confirm"}
+        onPress={
+          step === 0
+            ? next
+            : ticketTab === "subscription" && !hasActiveSubscription(user?.subscription)
+              ? () => setTicketTab("ticket")
+              : confirm
+        }
+        label={
+          loading
+            ? "Please wait..."
+            : step === 0
+              ? "Next"
+              : ticketTab === "subscription" && !hasActiveSubscription(user?.subscription)
+                ? "Use One Ticket to pay"
+                : "Confirm"
+        }
         disabled={loading}
       />
     </View>

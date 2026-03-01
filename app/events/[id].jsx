@@ -69,13 +69,29 @@ export default function EventDetails() {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.meta}>
-          {event.city || "Morocco"} | {formatDate(event.date)} |{" "}
-          {event.budget || 600} MAD
-        </Text>
+        <View style={styles.metaColsContainer}>
+          <View style={styles.metaCol}>
+            <Text style={styles.metaTitle}>Location</Text>
+            <Text style={styles.meta}>{event.city}</Text>
+          </View>
+          <View style={styles.metaColSeparator} />
+          <View style={styles.metaCol}>
+            <Text style={styles.metaTitle}>Date</Text>
+            <Text style={styles.meta}>{formatDate(event.date)}</Text>
+          </View>
+          {/* <View style={styles.metaColSeparator} /> */}
+          {/* <View style={styles.metaCol}>
+            <Text style={styles.metaTitle}>Price</Text>
+            <Text style={styles.meta}>{event.budget || 600} MAD</Text>
+          </View> */}
+        </View>
         <Text style={styles.meta}>About the event</Text>
         <Text style={styles.description}>
           {event.description || "Join us for a memorable dining experience."}
+          Brunch is a popular late-morning to early-afternoon meal (typically 10
+          a.m. to 3 p.m.) that combines breakfast and lunch items, often
+          featuring both sweet and savory dishes, such as Eggs Benedict,
+          pancakes, and cocktails like mimosas
         </Text>
       </View>
 

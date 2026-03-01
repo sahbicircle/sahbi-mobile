@@ -9,3 +9,8 @@ export const getSubscription = async () => {
   const { data } = await api.get("/payments/subscription");
   return data;
 };
+
+export const createTicketPaymentIntent = async (eventId) => {
+  const { data } = await api.post("/payments/ticket-intent", { eventId });
+  return data;
+};

@@ -43,10 +43,33 @@ export const styles = StyleSheet.create({
     display: "grid",
     paddingHorizontal: 16,
   },
+  metaColsContainer: {
+    gap: 8,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  metaCol: {
+    gap: 4,
+    width: "33.33%",
+    display: "flex",
+    flexDirection: "column",
+  },
+  metaColSeparator: {
+    width: 1,
+    height: "100%",
+    backgroundColor: "white",
+  },
+  metaTitle: {
+    fontSize: 20,
+    color: "white",
+    fontWeight: 700,
+    fontFamily: "Poppins",
+  },
   meta: {
     fontSize: 14,
     color: "white",
-    marginBottom: 8,
+    fontFamily: "Poppins",
   },
   description: {
     fontSize: 15,

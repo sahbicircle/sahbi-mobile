@@ -13,6 +13,7 @@ import { formatDate } from "../../helpers/functions.helper";
 import { useAuth } from "../../hooks/useAuth";
 import { useBookings } from "../../hooks/useBooking";
 import { useEvents } from "../../hooks/useEvents";
+import { useNotifications } from "../../hooks/useNotifications";
 import { styles } from "./home.styles";
 
 const EventDetails = ({ item }) => {
@@ -90,7 +91,7 @@ const EventFeedback = ({ item }) => {
             How was your group in {item.title}?
           </Text>
           <Text style={{ fontSize: 12, fontFamily: "Poppins" }}>
-            let's connect with each other
+            let&apos;s connect with each other
           </Text>
           <TouchableOpacity
             style={styles.feedbackBtn}
@@ -108,27 +109,62 @@ const EventFeedback = ({ item }) => {
 
 export default function Home() {
   const { user } = useAuth();
+  const router = useRouter();
   const { bookings, isLoading: isLoadingBookings } = useBookings();
   const { events, isLoading: isLoadingEvents } = useEvents();
+  const { unreadCount } = useNotifications();
   const loading = isLoadingBookings || isLoadingEvents;
 
   if (loading && (!bookings?.length || !events?.length)) {
     return (
-      <View style={[styles.container, { flex: 1, justifyContent: "center", alignItems: "center" }]}>
+      <View
+        style={[
+          styles.container,
+          { flex: 1, justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color="#eba28a" />
       </View>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Salam, {user?.firstName} {user?.lastName} 👋
-      </Text>
+  const ListHeader = () => (
+    <>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <Text style={styles.title}>
+          Salam, {user?.firstName} {user?.lastName} 👋
+        </Text>
+        <TouchableOpacity
+          onPress={() => router.push("/(tabs)/notifications")}
+          style={{ padding: 8, position: "relative" }}
+        >
+          <Ionicons name="notifications-outline" size={28} color="#333" />
+          {unreadCount > 0 && (
+            <View
+              style={{
+                position: "absolute",
+                top: 4,
+                right: 4,
+                minWidth: 18,
+                height: 18,
+                borderRadius: 9,
+                backgroundColor: "#FF4C42",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 4,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
       <Text style={styles.bigTitle}>Meet new people in Marrakech</Text>
 
-      <View style={styles.section}>
-        {bookings?.length > 0 && (
+      {bookings?.length > 0 && (
+        <View style={styles.section}>
           <FlatList
             data={bookings}
             keyExtractor={(item) => item._id}
@@ -136,18 +172,26 @@ export default function Home() {
             horizontal
             pagingEnabled
             snapToAlignment="start"
-            ItemSeparatorComponent={() => <View style={{ width: 16 }} />} // adds 10px gap
+            ItemSeparatorComponent={() => <View style={{ width: 16 }} />}
             decelerationRate="fast"
+            nestedScrollEnabled
           />
-        )}
-      </View>
+        </View>
+      )}
 
       <Text style={styles.smallTitle}>Book your next event</Text>
-      <FlatList
-        data={events}
-        keyExtractor={(e) => e._id}
-        renderItem={({ item }) => <EventDetails item={item} />}
-      />
-    </View>
+    </>
+  );
+
+  return (
+    <FlatList
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      data={events}
+      keyExtractor={(e) => e._id}
+      renderItem={({ item }) => <EventDetails item={item} />}
+      ListHeaderComponent={ListHeader}
+      showsVerticalScrollIndicator={false}
+    />
   );
 }

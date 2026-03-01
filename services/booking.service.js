@@ -1,7 +1,10 @@
 import { api } from "./api";
 
-export const createBooking = async (eventId) => {
-  const { data } = await api.post("/bookings", { eventId });
+export const createBooking = async (eventId, paymentIntentId = null) => {
+  const { data } = await api.post("/bookings", {
+    eventId,
+    ...(paymentIntentId && { paymentIntentId }),
+  });
   return data;
 };
 

@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { formatDate } from "../../helpers/functions.helper";
 import { useEvents } from "../../hooks/useEvents";
 import { styles } from "./events.styles";
@@ -44,14 +43,12 @@ export default function Events() {
   const { events } = useEvents();
 
   return (
-    <ScrollView contentContainerStyle={styles.main}>
-      <Text style={styles.title}>All Events</Text>
-
-      <FlatList
-        data={events}
-        keyExtractor={(e) => e._id}
-        renderItem={({ item }) => <EventDetails item={item} />}
-      />
-    </ScrollView>
+    <FlatList
+      data={events}
+      keyExtractor={(e) => e._id}
+      renderItem={({ item }) => <EventDetails item={item} />}
+      ListHeaderComponent={() => <Text style={styles.title}>All Events</Text>}
+      contentContainerStyle={styles.main}
+    />
   );
 }

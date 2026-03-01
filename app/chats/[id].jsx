@@ -49,6 +49,14 @@ export default function ChatRoom() {
     Promise.all([loadChat(), loadMessages()]).finally(() => setLoading(false));
   }, [loadChat, loadMessages]);
 
+  useEffect(() => {
+    if (!chat || chat.type !== "event") return;
+    const eventDate = chat.event?.date ? new Date(chat.event.date) : null;
+    if (eventDate && eventDate > new Date()) {
+      router.back();
+    }
+  }, [chat, router]);
+
   const send = async () => {
     const trimmed = text.trim();
     if (!trimmed || sending) return;

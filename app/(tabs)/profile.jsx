@@ -1,16 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  FlatList,
   Image,
-  Modal,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -18,6 +17,7 @@ import Svg, { Circle } from "react-native-svg";
 import { CompleteProfileForm } from "../../components/CompleteProfileForm";
 import { useAuth } from "../../hooks/useAuth";
 import { useBookings } from "../../hooks/useBooking";
+import { useNotifications } from "../../hooks/useNotifications";
 import { cancelBooking } from "../../services/booking.service";
 import { updateProfile } from "../../services/profile.service";
 import { clearAuth, getAuth, setAuth } from "../../store/auth.store";
@@ -38,15 +38,32 @@ const LANGUAGES = [
 ];
 const INTERESTS = ["Sports", "Music", "Travel", "Food", "Movies"];
 
+let didNavigateToVerification = false;
+
 export default function Profile() {
   const router = useRouter();
   const { user, profileCompletion, refresh } = useAuth();
   const { bookings, refetch: refetchBookings } = useBookings();
+  const { unreadCount } = useNotifications();
 
-  const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (didNavigateToVerification) {
+        setIsVerifying(true);
+        refresh().finally(() => {
+          setIsVerifying(false);
+          didNavigateToVerification = false;
+        });
+      }
+    }, [refresh])
+  );
   const [fullUser, setFullUser] = useState(null);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+  const [showLanguage, setShowLanguage] = useState(false);
+  const [showInterests, setShowInterests] = useState(false);
   const [showPhotoEditor, setShowPhotoEditor] = useState(false);
   const [savingPhotos, setSavingPhotos] = useState(false);
 
@@ -59,28 +76,26 @@ export default function Profile() {
     photoUrls[0] ||
     "https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=400&auto=format&fit=crop";
 
-  const handleSaveField = async () => {
-    try {
-      const payload =
-        editingField === "interests"
-          ? { interests: tempValue }
-          : { [editingField]: tempValue };
-      const updated = await updateProfile(payload);
-      const auth = await getAuth();
-      await setAuth(updated, auth.token);
-      refresh();
-    } catch (err) {
-      console.error("Failed to save:", err);
-    }
-    setEditingField(null);
-  };
-
   const handleLogout = async () => {
     await clearAuth();
     router.replace("/(auth)/login");
   };
 
+  const canCancelBooking = (booking) => {
+    const eventDate = booking.event?.date ? new Date(booking.event.date) : null;
+    if (!eventDate) return true;
+    const hoursUntilEvent = (eventDate - new Date()) / (1000 * 60 * 60);
+    return hoursUntilEvent > 24;
+  };
+
   const handleCancelBooking = (booking) => {
+    if (!canCancelBooking(booking)) {
+      Alert.alert(
+        "Cannot cancel",
+        "You cannot cancel a booking within 24 hours of the event."
+      );
+      return;
+    }
     Alert.alert(
       "Cancel booking",
       `Cancel your booking for ${booking.event?.title || "this event"}?`,
@@ -106,7 +121,7 @@ export default function Profile() {
   };
 
   const toggleInterest = (interest) => {
-    const current = user?.interests || [];
+    const current = Array.isArray(tempValue) ? tempValue : (user?.interests || []);
     const updated = current.includes(interest)
       ? current.filter((i) => i !== interest)
       : [...current, interest];
@@ -195,7 +210,30 @@ export default function Profile() {
   //   );
   // }
 
+  const showVerifyingLoader = isVerifying;
+
   return (
+    <>
+      {showVerifyingLoader && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(255,255,255,0.9)",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <ActivityIndicator size="large" color="#eba28a" />
+          <Text style={{ marginTop: 12, fontSize: 16, color: "#333", fontFamily: "Poppins" }}>
+            Verifying your profile...
+          </Text>
+        </View>
+      )}
     <ScrollView contentContainerStyle={styles.main}>
       <View style={styles.imageContainer}>
         <View
@@ -275,6 +313,88 @@ export default function Profile() {
           {user?.firstName || ""} {user?.lastName || ""}
         </Text>
       </View>
+      <TouchableOpacity
+        style={[
+          styles.verifyCard,
+          (fullUser?.faceVerified || user?.faceVerified) && {
+            backgroundColor: "#5cb85c",
+            opacity: 0.9,
+          },
+        ]}
+        onPress={() => {
+          if (fullUser?.faceVerified || user?.faceVerified) return;
+          didNavigateToVerification = true;
+          router.push({
+            pathname: "/(auth)/face-verification",
+            params: { from: "profile" },
+          });
+        }}
+        disabled={!!(fullUser?.faceVerified || user?.faceVerified)}
+      >
+        <View style={styles.verifyCardInner}>
+          <Ionicons
+            size={24}
+            name={
+              fullUser?.faceVerified || user?.faceVerified
+                ? "shield-checkmark"
+                : "shield-checkmark-outline"
+            }
+            color="white"
+          />
+          <View style={styles.verifyContainer}>
+            <Text style={[styles.verifyTitle, { color: "white" }]}>
+              {fullUser?.faceVerified || user?.faceVerified
+                ? "Profile verified"
+                : "Verify your profile"}
+            </Text>
+            <Text
+              style={[
+                styles.verifyDescription,
+                { color: "rgba(255,255,255,0.9)" },
+              ]}
+            >
+              {fullUser?.faceVerified || user?.faceVerified
+                ? "Face verified"
+                : "To get more fun"}
+            </Text>
+          </View>
+        </View>
+        {!(fullUser?.faceVerified || user?.faceVerified) && (
+          <Ionicons size={24} color="white" name="arrow-forward-outline" />
+        )}
+      </TouchableOpacity>
+      {profileCompletion < 100 && (
+        <TouchableOpacity
+          style={styles.completeProfileCard}
+          onPress={() => setShowCompleteProfile(!showCompleteProfile)}
+        >
+          <View style={styles.verifyCardInner}>
+            <Ionicons size={24} name="person-add-outline" color="#eba28a" />
+            <View style={styles.verifyContainer}>
+              <Text style={styles.verifyTitle}>Complete your profile</Text>
+              <Text style={styles.verifyDescription}>
+                Add personality details for better matching
+              </Text>
+            </View>
+          </View>
+          <Ionicons
+            size={24}
+            name={showCompleteProfile ? "chevron-up" : "chevron-down"}
+            color="#eba28a"
+          />
+        </TouchableOpacity>
+      )}
+      {showCompleteProfile && (
+        <View style={styles.completeProfileForm}>
+          <CompleteProfileForm
+            user={fullUser || user}
+            onSaved={() => {
+              refresh();
+              setShowCompleteProfile(false);
+            }}
+          />
+        </View>
+      )}
 
       <TouchableOpacity
         style={styles.selectCard}
@@ -367,87 +487,38 @@ export default function Profile() {
           )}
         </View>
       )}
-
-      {profileCompletion < 100 && (
-        <TouchableOpacity
-          style={styles.completeProfileCard}
-          onPress={() => setShowCompleteProfile(!showCompleteProfile)}
-        >
-          <View style={styles.verifyCardInner}>
-            <Ionicons size={24} name="person-add-outline" color="#eba28a" />
-            <View style={styles.verifyContainer}>
-              <Text style={styles.verifyTitle}>Complete your profile</Text>
-              <Text style={styles.verifyDescription}>
-                Add personality details for better matching
+      <TouchableOpacity
+        style={styles.subscribeCard}
+        onPress={() => router.push("/(tabs)/notifications")}
+      >
+        <View style={styles.subscribeContainer}>
+          <Text style={styles.subscribeTitle}>Notifications</Text>
+          <Text style={styles.subscribeDescription}>
+            {unreadCount > 0
+              ? `${unreadCount} unread`
+              : "App updates and announcements"}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {unreadCount > 0 && (
+            <View
+              style={{
+                minWidth: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: "#FF4C42",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 6,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>
+                {unreadCount > 99 ? "99+" : unreadCount}
               </Text>
             </View>
-          </View>
-          <Ionicons
-            size={24}
-            name={showCompleteProfile ? "chevron-up" : "chevron-down"}
-            color="#eba28a"
-          />
-        </TouchableOpacity>
-      )}
-      {showCompleteProfile && (
-        <View style={styles.completeProfileForm}>
-          <CompleteProfileForm
-            user={fullUser || user}
-            onSaved={() => {
-              refresh();
-              setShowCompleteProfile(false);
-            }}
-          />
-        </View>
-      )}
-      <TouchableOpacity
-        style={[
-          styles.verifyCard,
-          (fullUser?.faceVerified || user?.faceVerified) && {
-            backgroundColor: "#5cb85c",
-            opacity: 0.9,
-          },
-        ]}
-        onPress={() => {
-          if (fullUser?.faceVerified || user?.faceVerified) return;
-          router.push({
-            pathname: "/(auth)/face-verification",
-            params: { from: "profile" },
-          });
-        }}
-        disabled={!!(fullUser?.faceVerified || user?.faceVerified)}
-      >
-        <View style={styles.verifyCardInner}>
-          <Ionicons
-            size={24}
-            name={
-              fullUser?.faceVerified || user?.faceVerified
-                ? "shield-checkmark"
-                : "shield-checkmark-outline"
-            }
-            color="white"
-          />
-          <View style={styles.verifyContainer}>
-            <Text style={[styles.verifyTitle, { color: "white" }]}>
-              {fullUser?.faceVerified || user?.faceVerified
-                ? "Profile verified"
-                : "Verify your profile"}
-            </Text>
-            <Text
-              style={[
-                styles.verifyDescription,
-                { color: "rgba(255,255,255,0.9)" },
-              ]}
-            >
-              {fullUser?.faceVerified || user?.faceVerified
-                ? "Face verified"
-                : "To get more fun"}
-            </Text>
-          </View>
-        </View>
-        {!(fullUser?.faceVerified || user?.faceVerified) && (
+          )}
           <Ionicons size={24} color="white" name="arrow-forward-outline" />
-        )}
+        </View>
       </TouchableOpacity>
       <View style={styles.subscribeCard}>
         <View style={styles.subscribeContainer}>
@@ -461,48 +532,163 @@ export default function Profile() {
       </View>
       <Text style={styles.title}>Preferences</Text>
       <TouchableOpacity
-        style={styles.selectCard}
+        style={styles.completeProfileCard}
         onPress={() => {
-          setEditingField("language");
-          setTempValue(user?.language || LANGUAGES[0]);
+          setShowLanguage(!showLanguage);
+          if (!showLanguage) {
+            setTempValue(user?.language || LANGUAGES[0]);
+            setShowInterests(false);
+          }
         }}
       >
-        <View style={styles.selectContainer}>
-          <Text style={styles.selectTitle}>Language</Text>
-          {user?.language ? (
-            <Text style={styles.selectDescription}>{user?.language}</Text>
-          ) : null}
-        </View>
-
-        <Ionicons size={24} color="white" name="arrow-forward-outline" />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.selectCard}
-        onPress={() => {
-          setEditingField("interests");
-          setTempValue(user?.interests || []);
-        }}
-      >
-        <View style={styles.selectContainer}>
-          <Text style={styles.selectTitle}>Interests</Text>
-          {user?.interests?.length ? (
-            <Text style={styles.selectDescription}>
-              {user.interests.join(", ")}
+        <View style={styles.verifyCardInner}>
+          <Ionicons size={24} name="language-outline" color="#eba28a" />
+          <View style={styles.verifyContainer}>
+            <Text style={styles.verifyTitle}>Language</Text>
+            <Text style={styles.verifyDescription}>
+              {user?.language || "Select language"}
             </Text>
-          ) : null}
+          </View>
         </View>
-
-        <Ionicons size={24} color="white" name="arrow-forward-outline" />
+        <Ionicons
+          size={24}
+          name={showLanguage ? "chevron-up" : "chevron-down"}
+          color="#eba28a"
+        />
       </TouchableOpacity>
+      {showLanguage && (
+        <View style={styles.completeProfileForm}>
+          {LANGUAGES.map((lang) => (
+            <TouchableOpacity
+              key={lang}
+              onPress={() => setTempValue(lang)}
+              style={[
+                styles.pill,
+                {
+                  backgroundColor: tempValue === lang ? "#eba28a" : "#eee",
+                  marginVertical: 5,
+                },
+              ]}
+            >
+              <Text style={{ color: tempValue === lang ? "#fff" : "#333" }}>
+                {lang}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              marginTop: 12,
+              gap: 12,
+            }}
+          >
+            <TouchableOpacity onPress={() => setShowLanguage(false)}>
+              <Text style={{ color: "#555" }}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  const updated = await updateProfile({ language: tempValue });
+                  const auth = await getAuth();
+                  await setAuth(updated, auth.token);
+                  refresh();
+                  setShowLanguage(false);
+                } catch (err) {
+                  console.error("Failed to save:", err);
+                }
+              }}
+            >
+              <Text style={{ color: "#eba28a", fontWeight: "bold" }}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+      <TouchableOpacity
+        style={styles.completeProfileCard}
+        onPress={() => {
+          setShowInterests(!showInterests);
+          if (!showInterests) {
+            setTempValue(user?.interests || []);
+            setShowLanguage(false);
+          }
+        }}
+      >
+        <View style={styles.verifyCardInner}>
+          <Ionicons size={24} name="heart-outline" color="#eba28a" />
+          <View style={styles.verifyContainer}>
+            <Text style={styles.verifyTitle}>Interests</Text>
+            <Text style={styles.verifyDescription}>
+              {user?.interests?.length
+                ? user.interests.join(", ")
+                : "Select interests"}
+            </Text>
+          </View>
+        </View>
+        <Ionicons
+          size={24}
+          name={showInterests ? "chevron-up" : "chevron-down"}
+          color="#eba28a"
+        />
+      </TouchableOpacity>
+      {showInterests && (
+        <View style={styles.completeProfileForm}>
+          {INTERESTS.map((item) => (
+            <TouchableOpacity
+              key={item}
+              onPress={() => toggleInterest(item)}
+              style={[
+                styles.pill,
+                {
+                  backgroundColor: tempValue.includes(item) ? "#eba28a" : "#eee",
+                  marginVertical: 5,
+                },
+              ]}
+            >
+              <Text
+                style={{
+                  color: tempValue.includes(item) ? "#fff" : "#333",
+                }}
+              >
+                {item}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              marginTop: 12,
+              gap: 12,
+            }}
+          >
+            <TouchableOpacity onPress={() => setShowInterests(false)}>
+              <Text style={{ color: "#555" }}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  const updated = await updateProfile({ interests: tempValue });
+                  const auth = await getAuth();
+                  await setAuth(updated, auth.token);
+                  refresh();
+                  setShowInterests(false);
+                } catch (err) {
+                  console.error("Failed to save:", err);
+                }
+              }}
+            >
+              <Text style={{ color: "#eba28a", fontWeight: "bold" }}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <Text style={styles.title}>My Bookings</Text>
       {bookings?.length > 0 ? (
-        <FlatList
-          contentContainerStyle={styles.section}
-          data={bookings}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => (
-            <View style={styles.subscribeCard}>
+        <View style={styles.section}>
+          {bookings.map((item) => (
+            <View key={item._id} style={styles.subscribeCard}>
               <View style={styles.subscribeContainer}>
                 <Text style={styles.subscribeTitle}>{item.event?.title}</Text>
                 <Text style={styles.subscribeDescription}>
@@ -514,9 +700,7 @@ export default function Profile() {
                     : ""}
                 </Text>
               </View>
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-              >
+              {canCancelBooking(item) && (
                 <TouchableOpacity
                   onPress={() => handleCancelBooking(item)}
                   style={{
@@ -535,11 +719,10 @@ export default function Profile() {
                     Cancel
                   </Text>
                 </TouchableOpacity>
-                {/* <Ionicons size={24} color="white" name="arrow-forward-outline" /> */}
-              </View>
+              )}
             </View>
-          )}
-        />
+          ))}
+        </View>
       ) : (
         <Text style={{ color: "#555" }}>You have no bookings yet.</Text>
       )}
@@ -549,84 +732,7 @@ export default function Profile() {
       >
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
-      <Modal visible={!!editingField} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit {editingField}</Text>
-
-            {editingField === "language" ? (
-              LANGUAGES.map((lang) => (
-                <TouchableOpacity
-                  key={lang}
-                  onPress={() => setTempValue(lang)}
-                  style={[
-                    styles.pill,
-                    {
-                      backgroundColor: tempValue === lang ? "#eba28a" : "#eee",
-                      marginVertical: 5,
-                    },
-                  ]}
-                >
-                  <Text style={{ color: tempValue === lang ? "#fff" : "#333" }}>
-                    {lang}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            ) : editingField === "interests" ? (
-              <FlatList
-                data={INTERESTS}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => toggleInterest(item)}
-                    style={[
-                      styles.pill,
-                      {
-                        backgroundColor: tempValue.includes(item)
-                          ? "#eba28a"
-                          : "#eee",
-                        marginVertical: 5,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={{
-                        color: tempValue.includes(item) ? "#fff" : "#333",
-                      }}
-                    >
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-            ) : (
-              <TextInput
-                multiline
-                value={tempValue}
-                onChangeText={setTempValue}
-                style={styles.textArea}
-              />
-            )}
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginTop: 20,
-              }}
-            >
-              <TouchableOpacity onPress={() => setEditingField(null)}>
-                <Text style={{ color: "#555" }}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleSaveField}>
-                <Text style={{ color: "#eba28a", fontWeight: "bold" }}>
-                  Save
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
+    </>
   );
 }

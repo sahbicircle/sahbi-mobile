@@ -94,6 +94,13 @@ export const styles = StyleSheet.create({
     marginTop: 20,
   },
 
+  tabDescription: {
+    fontSize: 14,
+    color: "#555",
+    fontFamily: "Poppins",
+    lineHeight: 22,
+  },
+
   backBtn: {
     marginBottom: 12,
   },

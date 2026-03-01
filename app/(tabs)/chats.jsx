@@ -14,6 +14,12 @@ export default function Chats() {
   const router = useRouter();
   const { chats, isLoading } = useChats();
 
+  const visibleChats = chats.filter((c) => {
+    if (c.type !== "event") return true;
+    const eventDate = c.event?.date ? new Date(c.event.date) : null;
+    return eventDate && eventDate <= new Date();
+  });
+
   if (isLoading) {
     return (
       <View style={[styles.container, { flex: 1, justifyContent: "center", alignItems: "center" }]}>
@@ -27,7 +33,7 @@ export default function Chats() {
       <Text style={styles.title}>Chats</Text>
 
       <FlatList
-        data={chats}
+        data={visibleChats}
         keyExtractor={(c) => String(c.id || c._id) || ""}
         renderItem={({ item }) => (
           <TouchableOpacity

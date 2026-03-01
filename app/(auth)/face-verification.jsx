@@ -27,10 +27,17 @@ export default function FaceVerification() {
 
   if (!permission.granted) {
     return (
-      <View style={styles.container}>
-        <Text>No camera access</Text>
-        <TouchableOpacity onPress={requestPermission}>
-          <Text>Grant permission</Text>
+      <View style={[styles.container, styles.permissionContainer]}>
+        <Ionicons name="camera-outline" size={64} color="white" />
+        <Text style={styles.permissionText}>Camera access needed</Text>
+        <Text style={styles.permissionSubtext}>
+          Allow camera to verify your profile
+        </Text>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={requestPermission}
+        >
+          <Text style={styles.permissionButtonText}>Grant permission</Text>
         </TouchableOpacity>
       </View>
     );
@@ -41,6 +48,9 @@ export default function FaceVerification() {
     try {
       setLoading(true);
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.6 });
+      if (!photo?.uri) {
+        throw new Error("Failed to capture photo");
+      }
       const verificationResult = await verifyFace(photo.uri);
 
       if (isFromProfile) {
@@ -94,7 +104,11 @@ export default function FaceVerification() {
           onPress={capture}
           disabled={loading}
         >
-          {loading && <ActivityIndicator color="white" />}
+          {loading ? (
+            <ActivityIndicator color="#eba28a" />
+          ) : (
+            <Ionicons name="camera" size={36} color="#eba28a" />
+          )}
         </TouchableOpacity>
       </View>
     </View>

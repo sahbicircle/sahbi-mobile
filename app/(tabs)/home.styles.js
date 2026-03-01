@@ -2,13 +2,17 @@ import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: "#faeeeb",
+  },
+  scrollContent: {
     gap: 16,
     flexGrow: 1,
     display: "grid",
     paddingTop: 60,
     paddingLeft: 24,
     paddingRight: 24,
-    paddingBottom: 0,
+    paddingBottom: 40,
     backgroundColor: "#faeeeb",
   },
   bigTitle: {
