@@ -10,7 +10,10 @@ export const getSubscription = async () => {
   return data;
 };
 
-export const createTicketPaymentIntent = async (eventId) => {
-  const { data } = await api.post("/payments/ticket-intent", { eventId });
+export const createTicketPaymentIntent = async (eventId, options = {}) => {
+  const { data } = await api.post("/payments/ticket-intent", {
+    eventId,
+    ...(options.withPlusOne && { withPlusOne: true }),
+  });
   return data;
 };

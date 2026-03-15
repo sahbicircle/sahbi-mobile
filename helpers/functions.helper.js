@@ -9,6 +9,26 @@ export function formatDate(dateStr) {
   });
 }
 
+export function formatDateShort(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+export function formatDateTicket(dateStr) {
+  const d = new Date(dateStr);
+  const weekday = d.toLocaleString("en-US", { weekday: "long" });
+  const monthDay = d.toLocaleString("en-US", { month: "short", day: "numeric" });
+  const time = d.toLocaleString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return { weekday, monthDay, time };
+}
+
 export const calculateProfileCompletion = (user) => {
   if (!user) return 0;
 
