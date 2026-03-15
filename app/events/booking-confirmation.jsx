@@ -120,7 +120,11 @@ export default function BookingConfirmation() {
     try {
       setLoading(true);
       setError("");
-      const res = await createBooking(eventId);
+      const res = await createBooking(eventId, null, {
+        language: form.language,
+        budget: form.budget,
+        dinner: form.dinner,
+      });
       router.replace({
         pathname: "/events/booking-success",
         params: { bookingId: res?.booking?._id || res?._id },
@@ -148,7 +152,12 @@ export default function BookingConfirmation() {
       } = await createTicketPaymentIntent(eventId, { withPlusOne });
 
       if (free || !clientSecret) {
-        const res = await createBooking(eventId, null, { withPlusOne });
+        const res = await createBooking(eventId, null, {
+          withPlusOne,
+          language: form.language,
+          budget: form.budget,
+          dinner: form.dinner,
+        });
         router.replace({
           pathname: "/events/booking-success",
           params: { bookingId: res?.booking?._id || res?._id },
@@ -178,7 +187,12 @@ export default function BookingConfirmation() {
         return;
       }
 
-      const res = await createBooking(eventId, piId, { withPlusOne });
+      const res = await createBooking(eventId, piId, {
+        withPlusOne,
+        language: form.language,
+        budget: form.budget,
+        dinner: form.dinner,
+      });
       router.replace({
         pathname: "/events/booking-success",
         params: { bookingId: res?.booking?._id || res?._id },

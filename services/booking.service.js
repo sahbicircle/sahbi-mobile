@@ -6,10 +6,14 @@ export const getBookingById = async (bookingId) => {
 };
 
 export const createBooking = async (eventId, paymentIntentId = null, options = {}) => {
+  const { withPlusOne, language, budget, dinner } = options;
   const { data } = await api.post("/bookings", {
     eventId,
     ...(paymentIntentId && { paymentIntentId }),
-    ...(options.withPlusOne && { withPlusOne: true }),
+    ...(withPlusOne && { withPlusOne: true }),
+    ...(language && { language }),
+    ...(budget && { budget }),
+    ...(Array.isArray(dinner) && dinner.length && { dinner }),
   });
   return data;
 };
