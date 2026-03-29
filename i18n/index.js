@@ -2,6 +2,15 @@ import * as Localization from "expo-localization";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
+const getRawLanguage = () => {
+  try {
+    const locales = Localization.getLocales?.();
+    return locales?.[0]?.languageCode ?? locales?.[0]?.languageTag ?? "en";
+  } catch {
+    return "en";
+  }
+};
+
 export const resources = {
   en: {
     translation: {
@@ -31,9 +40,11 @@ export const resources = {
       },
       forgotPassword: {
         title: "Forgot password?",
-        description: "Enter your email and we'll send you a 6-digit code to reset your password.",
+        description:
+          "Enter your email and we'll send you a 6-digit code to reset your password.",
         emailRequired: "Email is required",
-        codeSent: "If an account exists, a 6-digit code was sent to your email.",
+        codeSent:
+          "If an account exists, a 6-digit code was sent to your email.",
         socialAccount: "This account uses Google or Apple sign-in.",
         error: "Something went wrong. Try again.",
         sending: "Sending...",
@@ -253,7 +264,8 @@ export const resources = {
         description:
           "Entrez votre e-mail et nous vous enverrons un code à 6 chiffres pour réinitialiser votre mot de passe.",
         emailRequired: "L'e-mail est requis",
-        codeSent: "Si un compte existe, un code à 6 chiffres a été envoyé à votre e-mail.",
+        codeSent:
+          "Si un compte existe, un code à 6 chiffres a été envoyé à votre e-mail.",
         socialAccount: "Ce compte utilise la connexion Google ou Apple.",
         error: "Une erreur s'est produite. Réessayez.",
         sending: "Envoi...",
@@ -470,7 +482,8 @@ export const resources = {
         description:
           "أدخل بريدك الإلكتروني وسنرسل لك رمزاً مكوناً من 6 أرقام لإعادة تعيين كلمة المرور.",
         emailRequired: "البريد الإلكتروني مطلوب",
-        codeSent: "إذا كان الحساب موجوداً، تم إرسال رمز مكون من 6 أرقام إلى بريدك الإلكتروني.",
+        codeSent:
+          "إذا كان الحساب موجوداً، تم إرسال رمز مكون من 6 أرقام إلى بريدك الإلكتروني.",
         socialAccount: "هذا الحساب يستخدم تسجيل الدخول عبر Google أو Apple.",
         error: "حدث خطأ. حاول مرة أخرى.",
         sending: "جارٍ الإرسال...",
@@ -657,14 +670,23 @@ export const resources = {
   },
 };
 
-const deviceLanguage = Localization.getLocales?.()[0]?.languageCode || "en";
+const deviceLanguage = getRawLanguage().split("-")[0].toLowerCase() || "en";
 
+// eslint-disable-next-line import/no-named-as-default-member
 i18n.use(initReactI18next).init({
   resources,
   lng: deviceLanguage,
   fallbackLng: "en",
   compatibilityJSON: "v3",
   interpolation: { escapeValue: false },
+
+  load: "languageOnly",
+
+  saveMissing: __DEV__,
+  missingKeyHandler: __DEV__
+    ? (lng, ns, key) =>
+        console.warn(`[i18n] Missing key: "${key}" for lang: "${lng}"`)
+    : undefined,
 });
 
 // import { I18nManager } from "react-native";
