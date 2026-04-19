@@ -10,8 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getProfile } from "../../services/profile.service";
 import { register } from "../../services/auth.service";
+import { getProfile } from "../../services/profile.service";
 import { setAuth } from "../../store/auth.store";
 import { styles } from "./subscription.styles";
 
@@ -149,14 +149,19 @@ export default function Subscription() {
     if (loading) return;
 
     if (!fromTicket && !parsedUser) {
-      Alert.alert("Error", "Registration data is missing. Please start from the beginning.");
+      Alert.alert(
+        "Error",
+        "Registration data is missing. Please start from the beginning."
+      );
       router.replace("/(auth)/register");
       return;
     }
 
     setLoading(true);
     try {
-      const payload = fromTicket ? { subscription: plan?.name } : { ...parsedUser, subscription: plan?.name };
+      const payload = fromTicket
+        ? { subscription: plan?.name }
+        : { ...parsedUser, subscription: plan?.name };
       const res = await register(payload);
       if (!res?.user || !res?.token) {
         throw new Error("Invalid response from server");
@@ -173,6 +178,11 @@ export default function Subscription() {
     }
   };
 
+  const back = () => {
+    // router.replace("/(auth)/register");
+    router.back();
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {loading && (
@@ -182,6 +192,10 @@ export default function Subscription() {
         </View>
       )}
       <ScrollView contentContainerStyle={styles.main} scrollEnabled={!loading}>
+        <TouchableOpacity style={styles.backBtn} onPress={back}>
+          <Ionicons size={24} color="#E8937E" name="chevron-back" />
+        </TouchableOpacity>
+
         <View style={styles.screen}>
           <View style={styles.content}>
             {fromTicket ? null : (

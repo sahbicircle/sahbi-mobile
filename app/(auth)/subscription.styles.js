@@ -1,10 +1,14 @@
 import { StyleSheet } from "react-native";
+import { SAHBI } from "../../constants/sahbiUi";
 
 export const styles = StyleSheet.create({
   main: {
-    padding: 24,
     flexGrow: 1,
-    backgroundColor: "#fafafa",
+    paddingTop: 56,
+    paddingLeft: 24,
+    paddingRight: 24,
+    paddingBottom: 48,
+    backgroundColor: SAHBI.white,
   },
 
   screen: {
@@ -99,5 +103,10 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
     fontFamily: "Poppins",
+  },
+
+  backBtn: {
+    marginBottom: 12,
+    alignSelf: "flex-start",
   },
 });
