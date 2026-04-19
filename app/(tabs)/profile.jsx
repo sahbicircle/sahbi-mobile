@@ -4,7 +4,7 @@ import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -73,19 +73,9 @@ export default function Profile() {
   const [savingPhotos, setSavingPhotos] = useState(false);
   const [showCityModal, setShowCityModal] = useState(false);
   const [cityDraft, setCityDraft] = useState("");
-  const [carouselIndex, setCarouselIndex] = useState(0);
   const [settingsSheetVisible, setSettingsSheetVisible] = useState(false);
   const [bookingsSheetVisible, setBookingsSheetVisible] = useState(false);
-  const carouselRef = useRef(null);
   const screenW = Dimensions.get("window").width;
-
-  const scrollCarouselTo = (index) => {
-    carouselRef.current?.scrollTo({
-      x: index * screenW,
-      animated: true,
-    });
-    setCarouselIndex(index);
-  };
 
   const photoUrls = Array.isArray(fullUser?.photoUrl ?? user?.photoUrl)
     ? fullUser?.photoUrl ?? user?.photoUrl ?? []
@@ -438,7 +428,7 @@ export default function Profile() {
             </View>
           </LinearGradient>
 
-          <View style={{ width: screenW, paddingHorizontal: 20 }}>
+          <View style={{ padding: 20 }}>
             <TouchableOpacity
               onPress={() => {
                 if (fullUser?.faceVerified || user?.faceVerified) return;
