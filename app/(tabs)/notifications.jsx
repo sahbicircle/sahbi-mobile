@@ -70,7 +70,13 @@ export default function NotificationsTab() {
           >
             <View style={styles.cardHeader}>
               <Ionicons
-                name={item.type === "global" ? "megaphone" : "person"}
+                name={
+                  item.type === "global"
+                    ? "megaphone"
+                    : item.type === "match"
+                      ? "heart"
+                      : "person"
+                }
                 size={24}
                 color="#eba28a"
               />

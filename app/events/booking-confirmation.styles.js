@@ -417,4 +417,57 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
+
+  paymentModeSection: {
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  paymentModeOption: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#eee",
+    marginBottom: 10,
+  },
+  paymentModeOptionActive: {
+    borderColor: "#eba28a",
+    backgroundColor: "#fff5f2",
+  },
+  paymentModeRadio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: "#ccc",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    marginTop: 2,
+  },
+  paymentModeRadioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#eba28a",
+  },
+  paymentModeTexts: {
+    flex: 1,
+  },
+  paymentModeTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    fontFamily: "Poppins",
+  },
+  paymentModeDesc: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 4,
+    lineHeight: 18,
+    fontFamily: "Poppins",
+  },
 });

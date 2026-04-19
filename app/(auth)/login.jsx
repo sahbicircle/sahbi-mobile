@@ -27,8 +27,8 @@ export default function Login() {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const [email, setEmail] = useState("ayoubjdad1@gmail.com");
-  const [password, setPassword] = useState("@Ayoub031949");
+  const [email, setEmail] = useState("lina.haddad@gmail.com");
+  const [password, setPassword] = useState("@Lina123456");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

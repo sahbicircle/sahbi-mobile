@@ -9,8 +9,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { isPastEventDate } from "../../helpers/chat.helper";
 import { useAuth } from "../../hooks/useAuth";
 import { getBookingUsers } from "../../services/booking.service";
+import { ensureEventGroupChat } from "../../services/chat.service";
+import { getEventById } from "../../services/event.service";
 import { likeProfile } from "../../services/profile.service";
 import { styles } from "./profiles.styles";
 
@@ -48,6 +51,20 @@ export default function Profiles() {
     if (eventId) load();
   }, [eventId, user?.id, user?._id]);
 
+  useEffect(() => {
+    if (!eventId) return;
+    (async () => {
+      try {
+        const ev = await getEventById(eventId);
+        if (isPastEventDate(ev?.date)) {
+          await ensureEventGroupChat(eventId);
+        }
+      } catch (_) {
+        /* non-blocking */
+      }
+    })();
+  }, [eventId]);
+
   const goBack = () => {
     router.back();
   };
@@ -63,16 +80,18 @@ export default function Profiles() {
         )
       );
 
-      if (data.match && data.chat?.id) {
+      const matchChatId =
+        data.chat?._id || data.chat?.id || data.chatId;
+      if (data.match && matchChatId) {
         Alert.alert(
           "It's a match! 💕",
-          "You both liked each other. Start a conversation!",
+          "You both liked each other. A private chat is ready.",
           [
             {
-              text: "Chat now",
-              onPress: () => router.push(`/chats/${data.chat.id}`),
+              text: "Open chat",
+              onPress: () => router.push(`/chats/${matchChatId}`),
             },
-            { text: "Later" },
+            { text: "Later", style: "cancel" },
           ]
         );
       }

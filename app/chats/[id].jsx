@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -11,17 +12,36 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  getMessageSenderId,
+  getMessageSenderName,
+  isEventGroupChat,
+  isPrivateChat,
+} from "../../helpers/chat.helper";
+import { useAuth } from "../../hooks/useAuth";
 import { getChat, getMessages, sendMessage } from "../../services/chat.service";
 import { styles } from "./chat-room.styles";
 
 export default function ChatRoom() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [chat, setChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const listRef = useRef(null);
+
+  const myId = String(user?._id ?? user?.id ?? "");
+
+  const scrollToBottom = useCallback(() => {
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToEnd({ animated: true });
+    });
+  }, []);
 
   const loadChat = useCallback(async () => {
     if (!id) return;
@@ -50,12 +70,22 @@ export default function ChatRoom() {
   }, [loadChat, loadMessages]);
 
   useEffect(() => {
-    if (!chat || chat.type !== "event") return;
+    if (messages.length) scrollToBottom();
+  }, [messages.length, scrollToBottom]);
+
+  useEffect(() => {
+    if (!chat || !isEventGroupChat(chat)) return;
     const eventDate = chat.event?.date ? new Date(chat.event.date) : null;
     if (eventDate && eventDate > new Date()) {
       router.back();
     }
   }, [chat, router]);
+
+  const isMine = (msg) => {
+    if (msg?.demoAsCurrentUser) return true;
+    const sid = getMessageSenderId(msg);
+    return Boolean(sid && myId && sid === myId);
+  };
 
   const send = async () => {
     const trimmed = text.trim();
@@ -74,9 +104,60 @@ export default function ChatRoom() {
 
   const goBack = () => router.back();
 
+  const headerSubtitle = (() => {
+    if (!chat) return "";
+    if (isEventGroupChat(chat))
+      return chat.event?.title
+        ? `Dinner · ${chat.event.title}`
+        : "Your table group";
+    if (isPrivateChat(chat)) return "Private conversation";
+    return "";
+  })();
+
+  const renderMessage = ({ item }) => {
+    const mine = isMine(item);
+    const showSender =
+      isEventGroupChat(chat) && !mine && getMessageSenderName(item);
+
+    return (
+      <View
+        style={[styles.row, mine ? styles.rowMine : styles.rowTheirs]}
+      >
+        {mine ? (
+          <LinearGradient
+            colors={["#e85a4a", "#84A8D8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.bubbleMine}
+          >
+            <View style={styles.bubbleMineInner}>
+              <Text style={[styles.body, styles.bodyMine]}>
+                {item.text ?? item.body ?? item.content ?? ""}
+              </Text>
+            </View>
+          </LinearGradient>
+        ) : (
+          <View style={styles.bubbleTheirs}>
+            {showSender ? (
+              <Text style={styles.sender}>{getMessageSenderName(item)}</Text>
+            ) : null}
+            <Text style={styles.body}>
+              {item.text ?? item.body ?? item.content ?? ""}
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   if (loading) {
     return (
-      <View style={[styles.container, { flex: 1, justifyContent: "center", alignItems: "center" }]}>
+      <View
+        style={[
+          styles.flex,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color="#eba28a" />
       </View>
     );
@@ -84,51 +165,66 @@ export default function ChatRoom() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 8 : 0}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack}>
-          <Ionicons size={24} color="#eba28a" name="arrow-back-outline" />
+          <Ionicons size={24} color="#e85a4a" name="arrow-back-outline" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {chat?.title || "Chat"}
-        </Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {chat?.title ||
+              chat?.event?.title ||
+              (isPrivateChat(chat) ? "Private chat" : "Chat")}
+          </Text>
+          {headerSubtitle ? (
+            <Text style={styles.headerSub} numberOfLines={1}>
+              {headerSubtitle}
+            </Text>
+          ) : null}
+        </View>
       </View>
 
       <FlatList
+        ref={listRef}
         style={styles.messageList}
+        contentContainerStyle={styles.listContent}
         data={messages}
-        keyExtractor={(m) => m.id || m._id || String(Math.random())}
-        renderItem={({ item }) => (
-          <View style={styles.message}>
-            <Text style={styles.sender}>{item.senderName}</Text>
-            <Text style={styles.body}>{item.text}</Text>
-          </View>
-        )}
+        keyExtractor={(m, index) =>
+          String(m.id ?? m._id ?? `msg-${index}`)
+        }
+        renderItem={renderMessage}
         ListEmptyComponent={
           <Text style={styles.empty}>No messages yet. Say hello!</Text>
         }
-        inverted={false}
       />
 
-      <View style={styles.inputRow}>
+      <View style={[styles.inputBar, { paddingBottom: insets.bottom + 10 }]}>
         <TextInput
           style={styles.input}
           value={text}
           onChangeText={setText}
           placeholder="Message..."
           placeholderTextColor="#999"
-          returnKeyType="send"
-          onSubmitEditing={send}
+          returnKeyType="default"
+          multiline
         />
         <TouchableOpacity
           style={[styles.send, sending && styles.sendDisabled]}
           onPress={send}
           disabled={sending || !text.trim()}
+          activeOpacity={0.85}
         >
-          <Text style={styles.sendText}>Send</Text>
+          <LinearGradient
+            colors={["#e85a4a", "#84A8D8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.sendInner}
+          >
+            <Text style={styles.sendText}>Send</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

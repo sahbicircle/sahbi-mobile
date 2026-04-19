@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import {
   ImageBackground,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -92,6 +93,8 @@ export default function BookingConfirmation() {
   const [step, setStep] = useState(2);
   const [ticketTab, setTicketTab] = useState("Subscription");
   const [selectedTicketPlan, setSelectedTicketPlan] = useState("normal");
+  /** One-ticket flow: skip Stripe vs pay with card */
+  const [ticketPaymentMode, setTicketPaymentMode] = useState("manual");
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
 
   const [form, setForm] = useState({
@@ -103,6 +106,10 @@ export default function BookingConfirmation() {
   useEffect(() => {
     if (eventId) getEventById(eventId).then(setEvent).catch(console.error);
   }, [eventId]);
+
+  useEffect(() => {
+    if (Platform.OS === "web") setTicketPaymentMode("manual");
+  }, []);
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -142,9 +149,36 @@ export default function BookingConfirmation() {
   const confirmOneTicket = async () => {
     if (!eventId || !event) return;
     const withPlusOne = selectedTicketPlan === "premium";
+    const bookingOpts = {
+      withPlusOne,
+      language: form.language,
+      budget: form.budget,
+      dinner: form.dinner,
+    };
+
+    const finishWithoutPayment = async () => {
+      const res = await createBooking(eventId, null, {
+        ...bookingOpts,
+        skipPayment: true,
+      });
+      router.replace({
+        pathname: "/events/booking-success",
+        params: { bookingId: res?.booking?._id || res?._id },
+      });
+    };
+
     try {
       setLoading(true);
       setError("");
+
+      const useManual =
+        ticketPaymentMode === "manual" || Platform.OS === "web";
+
+      if (useManual) {
+        await finishWithoutPayment();
+        return;
+      }
+
       const {
         clientSecret,
         paymentIntentId: piId,
@@ -152,16 +186,7 @@ export default function BookingConfirmation() {
       } = await createTicketPaymentIntent(eventId, { withPlusOne });
 
       if (free || !clientSecret) {
-        const res = await createBooking(eventId, null, {
-          withPlusOne,
-          language: form.language,
-          budget: form.budget,
-          dinner: form.dinner,
-        });
-        router.replace({
-          pathname: "/events/booking-success",
-          params: { bookingId: res?.booking?._id || res?._id },
-        });
+        await finishWithoutPayment();
         return;
       }
 
@@ -187,12 +212,7 @@ export default function BookingConfirmation() {
         return;
       }
 
-      const res = await createBooking(eventId, piId, {
-        withPlusOne,
-        language: form.language,
-        budget: form.budget,
-        dinner: form.dinner,
-      });
+      const res = await createBooking(eventId, piId, bookingOpts);
       router.replace({
         pathname: "/events/booking-success",
         params: { bookingId: res?.booking?._id || res?._id },
@@ -201,7 +221,7 @@ export default function BookingConfirmation() {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Payment failed. Please try again."
+          "Booking failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -500,112 +520,174 @@ export default function BookingConfirmation() {
                   </Text>
                 </View>
               ) : (
-                TICKET_PLANS.map((plan) => {
-                  const isSelected = selectedTicketPlan === plan.id;
-                  const isPremium = plan.variant !== "complete";
-                  const gradientColors = !isPremium
-                    ? ["#ae8e87", "#f2d6ce"]
-                    : ["#76a1d2", "#f38773"];
-                  const price =
-                    plan.id === "normal"
-                      ? event?.price ?? 0
-                      : event?.premiumPrice ?? event?.price ?? 0;
+                <>
+                  {TICKET_PLANS.map((plan) => {
+                    const isSelected = selectedTicketPlan === plan.id;
+                    const isPremium = plan.variant !== "complete";
+                    const gradientColors = !isPremium
+                      ? ["#ae8e87", "#f2d6ce"]
+                      : ["#76a1d2", "#f38773"];
+                    const price =
+                      plan.id === "normal"
+                        ? event?.price ?? 0
+                        : event?.premiumPrice ?? event?.price ?? 0;
 
-                  return (
-                    <TouchableOpacity
-                      key={plan.id}
-                      activeOpacity={0.9}
-                      onPress={() => setSelectedTicketPlan(plan.id)}
-                      style={[
-                        styles.ticketPlanTouchable,
-                        isSelected && styles.ticketPlanSelected,
-                      ]}
-                    >
-                      <LinearGradient
+                    return (
+                      <TouchableOpacity
                         key={plan.id}
-                        colors={gradientColors}
-                        start={{ x: 1, y: 0.25 }}
-                        end={{ x: 0.5, y: 0.75 }}
+                        activeOpacity={0.9}
+                        onPress={() => setSelectedTicketPlan(plan.id)}
                         style={[
-                          styles.planCard,
-                          plan.variant === "premium" && styles.planCardPremium,
+                          styles.ticketPlanTouchable,
+                          isSelected && styles.ticketPlanSelected,
                         ]}
                       >
-                        <Ionicons
-                          name={
-                            plan.id === "normal"
-                              ? "ticket-outline"
-                              : "person-add-outline"
-                          }
-                          size={24}
-                          color={
-                            plan.variant === "normal" ? "#4a6fa5" : "#c94a3a"
-                          }
-                          style={styles.planCrown}
-                        />
-                        {plan.badge && (
-                          <View style={styles.planBadge}>
-                            <Text style={styles.planBadgeText}>
-                              {plan.badge}
+                        <LinearGradient
+                          key={plan.id}
+                          colors={gradientColors}
+                          start={{ x: 1, y: 0.25 }}
+                          end={{ x: 0.5, y: 0.75 }}
+                          style={[
+                            styles.planCard,
+                            plan.variant === "premium" && styles.planCardPremium,
+                          ]}
+                        >
+                          <Ionicons
+                            name={
+                              plan.id === "normal"
+                                ? "ticket-outline"
+                                : "person-add-outline"
+                            }
+                            size={24}
+                            color={
+                              plan.variant === "normal" ? "#4a6fa5" : "#c94a3a"
+                            }
+                            style={styles.planCrown}
+                          />
+                          {plan.badge && (
+                            <View style={styles.planBadge}>
+                              <Text style={styles.planBadgeText}>
+                                {plan.badge}
+                              </Text>
+                            </View>
+                          )}
+                          <Text
+                            style={{
+                              ...styles.planName,
+                              color: isPremium && "#fff",
+                            }}
+                          >
+                            {plan.name}
+                          </Text>
+                          {plan.subname && (
+                            <Text
+                              style={{
+                                ...styles.planSubname,
+                                color: isPremium && "#fff",
+                              }}
+                            >
+                              {plan.subname}
+                            </Text>
+                          )}
+                          <Text
+                            style={{
+                              ...styles.planDesc,
+                              color: isPremium && "#fff",
+                            }}
+                          >
+                            {plan.description}
+                          </Text>
+                          {plan.subtext && (
+                            <Text
+                              style={{
+                                ...styles.planSubtext,
+                                color: isPremium && "#fff",
+                              }}
+                            >
+                              {plan.subtext}
+                            </Text>
+                          )}
+                          {plan.features?.map((f, i) => (
+                            <Text
+                              key={i}
+                              style={{
+                                ...styles.planFeature,
+                                color: isPremium && "#fff",
+                              }}
+                            >
+                              • {f}
+                            </Text>
+                          ))}
+                          <View style={styles.planPriceBox}>
+                            <Text style={styles.planPrice}>
+                              {price > 0 ? `${price}` : "Free"}Dh
                             </Text>
                           </View>
-                        )}
-                        <Text
-                          style={{
-                            ...styles.planName,
-                            color: isPremium && "#fff",
-                          }}
-                        >
-                          {plan.name}
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  <View style={styles.paymentModeSection}>
+                    <Text style={styles.subtitle}>How do you want to pay?</Text>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => setTicketPaymentMode("manual")}
+                      style={[
+                        styles.paymentModeOption,
+                        ticketPaymentMode === "manual" &&
+                          styles.paymentModeOptionActive,
+                      ]}
+                    >
+                      <View style={styles.paymentModeRadio}>
+                        {ticketPaymentMode === "manual" ? (
+                          <View style={styles.paymentModeRadioInner} />
+                        ) : null}
+                      </View>
+                      <View style={styles.paymentModeTexts}>
+                        <Text style={styles.paymentModeTitle}>
+                          Confirm without card payment
                         </Text>
-                        {plan.subname && (
-                          <Text
-                            style={{
-                              ...styles.planSubname,
-                              color: isPremium && "#fff",
-                            }}
-                          >
-                            {plan.subname}
-                          </Text>
-                        )}
-                        <Text
-                          style={{
-                            ...styles.planDesc,
-                            color: isPremium && "#fff",
-                          }}
-                        >
-                          {plan.description}
+                        <Text style={styles.paymentModeDesc}>
+                          Complete the booking without opening Stripe — ideal for
+                          demos and when your API allows confirming without a
+                          payment intent.
                         </Text>
-                        {plan.subtext && (
-                          <Text
-                            style={{
-                              ...styles.planSubtext,
-                              color: isPremium && "#fff",
-                            }}
-                          >
-                            {plan.subtext}
+                      </View>
+                    </TouchableOpacity>
+
+                    {Platform.OS !== "web" ? (
+                      <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={() => setTicketPaymentMode("stripe")}
+                        style={[
+                          styles.paymentModeOption,
+                          ticketPaymentMode === "stripe" &&
+                            styles.paymentModeOptionActive,
+                        ]}
+                      >
+                        <View style={styles.paymentModeRadio}>
+                          {ticketPaymentMode === "stripe" ? (
+                            <View style={styles.paymentModeRadioInner} />
+                          ) : null}
+                        </View>
+                        <View style={styles.paymentModeTexts}>
+                          <Text style={styles.paymentModeTitle}>
+                            Pay with card (Stripe)
                           </Text>
-                        )}
-                        {plan.features?.map((f, i) => (
-                          <Text
-                            key={i}
-                            style={{
-                              ...styles.planFeature,
-                              color: isPremium && "#fff",
-                            }}
-                          >
-                            • {f}
-                          </Text>
-                        ))}
-                        <View style={styles.planPriceBox}>
-                          <Text style={styles.planPrice}>
-                            {price > 0 ? `${price}` : "Free"}Dh
+                          <Text style={styles.paymentModeDesc}>
+                            Opens the payment sheet, then confirms with your
+                            payment intent.
                           </Text>
                         </View>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  );
-                })
+                      </TouchableOpacity>
+                    ) : (
+                      <Text style={styles.paymentModeDesc}>
+                        Card payment is available in the iOS / Android app.
+                      </Text>
+                    )}
+                  </View>
+                </>
               )}
             </View>
           )}
@@ -668,6 +750,11 @@ export default function BookingConfirmation() {
             : ticketTab === "Subscription" &&
               !hasActiveSubscription(user?.subscription)
             ? "Use One Ticket to pay"
+            : ticketTab === "1 Ticket" &&
+              !hasActiveSubscription(user?.subscription) &&
+              ticketPaymentMode === "stripe" &&
+              Platform.OS !== "web"
+            ? "Pay & confirm"
             : "Confirm"
         }
         disabled={loading}

@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ImageBackground,
   ScrollView,
   Text,
@@ -11,7 +12,13 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  chatDocumentId,
+  findGroupChatForEvent,
+} from "../../helpers/chat.helper";
 import { formatDateShort } from "../../helpers/functions.helper";
+import { useBookings } from "../../hooks/useBooking";
+import { ensureEventGroupChat, listChats } from "../../services/chat.service";
 import { getEventById } from "../../services/event.service";
 import { styles } from "./event-details.styles";
 
@@ -19,14 +26,48 @@ export default function EventDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { bookings } = useBookings();
   const [event, setEvent] = useState(null);
   const [favorited, setFavorited] = useState(false);
+  const [openingChat, setOpeningChat] = useState(false);
 
   const goBack = () => router.back();
 
   useEffect(() => {
     getEventById(id).then(setEvent);
   }, [id]);
+
+  const bookingList = bookings ?? [];
+  const isBooked = bookingList.some(
+    (b) => String(b.event?._id ?? b.event?.id) === String(id)
+  );
+  const eventPassed = event?.date && new Date(event.date) < new Date();
+
+  const openTableGroupChat = async () => {
+    if (!event?._id) return;
+    try {
+      setOpeningChat(true);
+      await ensureEventGroupChat(event._id);
+      const all = await listChats();
+      const found = findGroupChatForEvent(all, event._id);
+      const cid = chatDocumentId(found);
+      if (cid) router.push(`/chats/${cid}`);
+      else {
+        Alert.alert(
+          "Group chat",
+          "Your table chat is not available yet. Open the Chats tab to refresh, or try again shortly."
+        );
+      }
+    } catch (err) {
+      Alert.alert(
+        "Chat",
+        err?.response?.data?.message ||
+          "Could not open the group chat. Try from the Chats tab."
+      );
+    } finally {
+      setOpeningChat(false);
+    }
+  };
 
   if (!event) {
     return (
@@ -132,30 +173,54 @@ export default function EventDetails() {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-      <TouchableOpacity
-        onPress={() =>
-          router.push({
-            pathname: "/events/booking-confirmation",
-            params: { eventId: event._id },
-          })
-        }
-        activeOpacity={0.85}
-        style={styles.getTicketBtn}
-      >
-        <LinearGradient
-          end={{ x: 1, y: 0 }}
-          start={{ x: 0, y: 0 }}
-          style={styles.primaryBtn}
-          colors={["#e85a4a", "#f4866e"]}
-        >
-          <Text style={styles.primaryBtnText}>Get Ticket</Text>
-          <View style={styles.chevrons}>
-            <Ionicons size={16} color="white" name="chevron-forward" />
-            <Ionicons size={16} color="white" name="chevron-forward" />
-            <Ionicons size={16} color="white" name="chevron-forward" />
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
+        {eventPassed && isBooked ? (
+          <TouchableOpacity
+            onPress={openTableGroupChat}
+            activeOpacity={0.85}
+            style={styles.getTicketBtn}
+            disabled={openingChat}
+          >
+            <LinearGradient
+              end={{ x: 1, y: 0 }}
+              start={{ x: 0, y: 0 }}
+              style={[
+                styles.primaryBtn,
+                { justifyContent: "center", columnGap: 10 },
+              ]}
+              colors={["#84A8D8", "#e85a4a"]}
+            >
+              <Ionicons name="chatbubbles-outline" size={20} color="white" />
+              <Text style={styles.primaryBtnText}>
+                {openingChat ? "Opening…" : "Table group chat"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        ) : !eventPassed ? (
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: "/events/booking-confirmation",
+                params: { eventId: event._id },
+              })
+            }
+            activeOpacity={0.85}
+            style={styles.getTicketBtn}
+          >
+            <LinearGradient
+              end={{ x: 1, y: 0 }}
+              start={{ x: 0, y: 0 }}
+              style={styles.primaryBtn}
+              colors={["#e85a4a", "#f4866e"]}
+            >
+              <Text style={styles.primaryBtnText}>Get Ticket</Text>
+              <View style={styles.chevrons}>
+                <Ionicons size={16} color="white" name="chevron-forward" />
+                <Ionicons size={16} color="white" name="chevron-forward" />
+                <Ionicons size={16} color="white" name="chevron-forward" />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );

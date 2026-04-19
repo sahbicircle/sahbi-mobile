@@ -1,10 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { isStaticDemo } from "../config/static-demo";
 import { getNotifications } from "../services/notification.service";
 
 export function useNotifications() {
   const queryClient = useQueryClient();
+  const demo = isStaticDemo();
   const { data, isLoading } = useQuery({
-    queryKey: ["notifications"],
+    queryKey: ["notifications", demo ? "static" : "live"],
     queryFn: async () => {
       const res = await getNotifications();
       return res.data;
