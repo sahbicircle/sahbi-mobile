@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatDate } from "../../helpers/functions.helper";
 import { useAuth } from "../../hooks/useAuth";
 import { useBookings } from "../../hooks/useBooking";
@@ -16,12 +17,13 @@ import { useEvents } from "../../hooks/useEvents";
 import { useNotifications } from "../../hooks/useNotifications";
 import { styles } from "./home.styles";
 
-const EventDetails = ({ item }) => {
+const EventDetails = ({ item, tone = "coral" }) => {
   const router = useRouter();
+  const cardStyle = tone === "blue" ? styles.cardBlue : styles.card;
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={cardStyle}
       onPress={() => router.push(`/events/${item._id}`)}
     >
       <View style={styles.cradHeader}>
@@ -33,7 +35,13 @@ const EventDetails = ({ item }) => {
           }}
           style={styles.cardImage}
         />
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text
+          style={styles.cardTitle}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {String(item.title || "").toUpperCase()}
+        </Text>
       </View>
       <View style={styles.cardContent}>
         <View style={styles.cardMetaContainer}>
@@ -73,31 +81,40 @@ const EventFeedback = ({ item }) => {
   return (
     <TouchableOpacity onPress={() => router.push(`/events/${item._id}`)}>
       <LinearGradient
-        end={{ x: 0.5, y: 0 }}
-        start={{ x: 0.5, y: 1 }}
+        end={{ x: 1, y: 0.5 }}
+        start={{ x: 0, y: 0.5 }}
         style={styles.feedbackCard}
-        colors={["#faeeeb", "#eba28a7d"]}
+        colors={["#F6C7B9", "#E8A08A"]}
       >
         <View style={styles.feedbackCardText}>
           <Text
             style={{
-              fontSize: 18,
-              maxWidth: 240,
-              fontWeight: 600,
-              textAlign: "center",
+              fontSize: 17,
+              maxWidth: 200,
+              fontWeight: "700",
+              textAlign: "left",
               fontFamily: "Poppins",
+              color: "#111",
             }}
           >
-            How was your group in {item.title}?
+            How was your group?
           </Text>
-          <Text style={{ fontSize: 12, fontFamily: "Poppins" }}>
-            let&apos;s connect with each other
+          <Text
+            style={{
+              fontSize: 12,
+              fontFamily: "Poppins",
+              color: "#333",
+            }}
+          >
+            {"Let's connect with each other"}
           </Text>
           <TouchableOpacity
             style={styles.feedbackBtn}
             onPress={() => router.push(`/profiles/${item._id}`)}
           >
-            <Text style={{ fontFamily: "Poppins" }}>Share my feedback</Text>
+            <Text style={{ fontFamily: "Poppins", fontWeight: "600" }}>
+              Share my feedback
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -108,6 +125,7 @@ const EventFeedback = ({ item }) => {
 };
 
 export default function Home() {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const router = useRouter();
   const { bookings, isLoading: isLoadingBookings } = useBookings();
@@ -130,38 +148,42 @@ export default function Home() {
 
   const ListHeader = () => (
     <>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Text style={styles.title}>
-          Salam, {user?.firstName} {user?.lastName} 👋
+          Salam, {user?.firstName || "Sahbi"}
         </Text>
         <TouchableOpacity
           onPress={() => router.push("/(tabs)/notifications")}
-          style={{ padding: 8, position: "relative" }}
+          style={styles.bellCircle}
         >
-          <Ionicons name="notifications-outline" size={28} color="#333" />
+          <Ionicons name="notifications-outline" size={22} color="#333" />
           {unreadCount > 0 && (
             <View
               style={{
                 position: "absolute",
-                top: 4,
-                right: 4,
-                minWidth: 18,
-                height: 18,
-                borderRadius: 9,
+                top: 2,
+                right: 2,
+                width: 10,
+                height: 10,
+                borderRadius: 5,
                 backgroundColor: "#FF4C42",
-                alignItems: "center",
-                justifyContent: "center",
-                paddingHorizontal: 4,
+                borderWidth: 1.5,
+                borderColor: "#fff",
               }}
-            >
-              <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </Text>
-            </View>
+            />
           )}
         </TouchableOpacity>
       </View>
-      <Text style={styles.bigTitle}>Meet new people in Marrakech</Text>
+      <Text style={styles.headlineSerif1}>{"What's happening in"}</Text>
+      <Text style={styles.headlineSerif2}>
+        {user?.city || "Marrakech"}
+      </Text>
 
       {bookings?.length > 0 && (
         <View style={styles.section}>
@@ -186,10 +208,15 @@ export default function Home() {
   return (
     <FlatList
       style={styles.container}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingTop: insets.top + 12 },
+      ]}
       data={events}
       keyExtractor={(e) => e._id}
-      renderItem={({ item }) => <EventDetails item={item} />}
+      renderItem={({ item, index }) => (
+        <EventDetails item={item} tone={index % 2 === 1 ? "blue" : "coral"} />
+      )}
       ListHeaderComponent={ListHeader}
       showsVerticalScrollIndicator={false}
     />

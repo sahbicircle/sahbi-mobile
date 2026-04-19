@@ -2,9 +2,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ImageBackground, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SAHBI } from "../../constants/sahbiUi";
 import { styles } from "./intro.styles";
 
 export default function Intro() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation();
   const backgroundImage = require("../../assets/images/group-friends-dining-out.jpg");
@@ -14,35 +17,59 @@ export default function Intro() {
       source={backgroundImage}
       style={styles.main}
       resizeMode="cover"
-      imageStyle={{ top: -120, maxWidth: 550 }}
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>{t("intro.title")}</Text>
-        <Text style={styles.subtitle}>{t("intro.subtitle")}</Text>
+      <View style={styles.imageDim} pointerEvents="none" />
 
-        <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+      <View
+        style={[styles.welcomeBlock, { top: insets.top + 16 }]}
+        pointerEvents="none"
+      >
+        <Text style={styles.welcomeLine1}>{t("intro.welcomeLine1")}</Text>
+        <Text style={styles.welcomeLine2}>{t("intro.welcomeLine2")}</Text>
+      </View>
+
+      <LinearGradient
+        colors={SAHBI.gradientIntroSheet}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={[
+          styles.sheet,
+          { paddingBottom: Math.max(insets.bottom, 12) + 28 },
+        ]}
+      >
+        <Text style={styles.sheetTitle}>{t("intro.title")}</Text>
+        <Text style={styles.sheetSubtitle}>{t("intro.subtitle")}</Text>
+
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/register")}
+          activeOpacity={0.9}
+          style={styles.primaryOuter}
+        >
           <LinearGradient
-            end={{ x: 1, y: 0 }}
-            start={{ x: 0, y: 1 }}
-            style={styles.button}
-            locations={[0, 0.15, 0.65, 1]}
-            colors={["#6A78B8", "#84A8D8", "#B796A3", "#DD866E"]}
+            colors={SAHBI.gradientCta}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.primaryBtn}
           >
-            <Text style={styles.buttonText}>{t("intro.getStarted")}</Text>
+            <Text style={styles.primaryBtnText}>{t("intro.getStarted")}</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.buttonWhite]}
+          style={styles.secondaryBtn}
           onPress={() => router.push("/(auth)/login")}
+          activeOpacity={0.85}
         >
-          <Text style={[styles.buttonText, { color: "#eba28a" }]}>
-            {t("intro.haveAccount")}
-          </Text>
+          <Text style={styles.secondaryBtnText}>{t("intro.haveAccount")}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.link}>{t("intro.terms")}</Text>
-      </View>
+        <View style={styles.termsRow}>
+          <Text style={styles.termsBase}>{t("intro.termsPrefix")} </Text>
+          <Text style={styles.termsLink}>{t("intro.termsLink")}</Text>
+          <Text style={styles.termsBase}> {t("intro.termsMid")} </Text>
+          <Text style={styles.termsLink}>{t("intro.privacyLink")}</Text>
+        </View>
+      </LinearGradient>
     </ImageBackground>
   );
 }

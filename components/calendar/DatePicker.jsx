@@ -9,9 +9,17 @@ import {
 } from "react-native";
 import styles from "./DatePicker.styles";
 
+function partsFromIso(iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.split("-");
+  if (!y || !m || !d) return null;
+  return { d, m, y };
+}
+
 export default function DatePicker({ t, form, show, update, setShow }) {
   const selectedDate = form.birthday ? new Date(form.birthday) : null;
   const formatDate = (date) => date.toISOString().split("T")[0];
+  const dmy = form.birthday ? partsFromIso(form.birthday) : null;
 
   // Handler for web input change
   const handleWebChange = (e) => {
@@ -34,11 +42,23 @@ export default function DatePicker({ t, form, show, update, setShow }) {
   return (
     <>
       <TouchableOpacity style={styles.input} onPress={() => setShow(true)}>
-        <Text style={selectedDate ? styles.inputText : styles.placeholder}>
-          {selectedDate
-            ? formatDate(selectedDate)
-            : t("register.birthday.placeholder")}
-        </Text>
+        {dmy ? (
+          <View style={styles.dmyRow}>
+            <Text style={styles.dmyPart}>{dmy.d}</Text>
+            <Text style={styles.dmySlash}> / </Text>
+            <Text style={styles.dmyPart}>{dmy.m}</Text>
+            <Text style={styles.dmySlash}> / </Text>
+            <Text style={styles.dmyPart}>{dmy.y}</Text>
+          </View>
+        ) : (
+          <View style={styles.dmyRow}>
+            <Text style={styles.placeholderGhost}>DD</Text>
+            <Text style={styles.dmySlash}> / </Text>
+            <Text style={styles.placeholderGhost}>MM</Text>
+            <Text style={styles.dmySlash}> / </Text>
+            <Text style={styles.placeholderGhost}>YYYY</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
       {/* iOS */}

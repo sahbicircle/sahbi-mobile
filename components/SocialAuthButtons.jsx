@@ -3,6 +3,7 @@ import * as Google from "expo-auth-session/providers/google";
 import Constants from "expo-constants";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Platform,
   StyleSheet,
@@ -30,10 +31,18 @@ WebBrowser.maybeCompleteAuthSession();
 
 /**
  * Reusable Google + Apple sign-in buttons.
- * On success: sets auth and calls onSuccess (e.g. router.replace).
+ * variant "glass" matches Sahbi auth mockups (frosted pills on gradients).
  */
-export function SocialAuthButtons({ onSuccess, disabled, buttonStyles = {} }) {
-  const [request, response, promptAsync] = Google.useAuthRequest({
+export function SocialAuthButtons({
+  onSuccess,
+  disabled,
+  buttonStyles = {},
+  variant = "solid",
+}) {
+  const { t } = useTranslation();
+  const isGlass = variant === "glass";
+
+  const [, response, promptAsync] = Google.useAuthRequest({
     expoClientId: googleWebClientId,
     iosClientId:
       process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || googleWebClientId,
@@ -94,6 +103,34 @@ export function SocialAuthButtons({ onSuccess, disabled, buttonStyles = {} }) {
     }
   };
 
+  if (isGlass) {
+    return (
+      <View style={[styles.container, buttonStyles]}>
+        <TouchableOpacity
+          style={[styles.btn, styles.glassBtn]}
+          onPress={handleGoogle}
+          disabled={disabled}
+          activeOpacity={0.88}
+        >
+          <Ionicons name="logo-google" size={22} color="#4285F4" />
+          <Text style={styles.glassBtnText}>{t("login.signInGoogle")}</Text>
+        </TouchableOpacity>
+
+        {Platform.OS === "ios" && AppleAuthentication && (
+          <TouchableOpacity
+            style={[styles.btn, styles.glassBtn]}
+            onPress={handleApple}
+            disabled={disabled}
+            activeOpacity={0.88}
+          >
+            <Ionicons name="logo-apple" size={22} color="#000" />
+            <Text style={styles.glassBtnText}>{t("login.signInApple")}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, buttonStyles]}>
       <TouchableOpacity
@@ -134,6 +171,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: 999,
     width: "100%",
+  },
+  glassBtn: {
+    backgroundColor: "rgba(255,255,255,0.68)",
+  },
+  glassBtnText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1A1A1A",
+    fontFamily: "Poppins",
   },
   googleBtn: {
     backgroundColor: "#4285F4",

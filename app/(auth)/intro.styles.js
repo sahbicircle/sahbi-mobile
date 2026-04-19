@@ -1,66 +1,109 @@
 import { StyleSheet } from "react-native";
+import { SAHBI } from "../../constants/sahbiUi";
 
 export const styles = StyleSheet.create({
   main: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "#fafafa",
-    height: "80%",
+    backgroundColor: SAHBI.black,
   },
-
-  card: {
-    gap: 16,
-    paddingTop: 32,
-    paddingLeft: 32,
-    paddingRight: 32,
-    paddingBottom: 60,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: "#fafafa",
+  imageDim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.22)",
   },
-
-  title: {
-    fontSize: 24,
+  welcomeBlock: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+  },
+  welcomeLine1: {
+    fontSize: 34,
     fontWeight: "700",
-    color: "#1f1f1f",
+    color: SAHBI.white,
+    fontFamily: "Poppins",
+    letterSpacing: -0.5,
+  },
+  welcomeLine2: {
+    fontSize: 34,
+    fontWeight: "700",
+    color: SAHBI.white,
+    fontFamily: "Poppins",
+    letterSpacing: -0.5,
+  },
+  sheet: {
+    paddingTop: 36,
+    paddingHorizontal: 28,
+    paddingBottom: 32,
+    borderTopLeftRadius: 56,
+    borderTopRightRadius: 56,
+    gap: 14,
+  },
+  sheetTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: SAHBI.black,
     textAlign: "center",
     fontFamily: "Poppins",
   },
-
-  subtitle: {
-    fontSize: 12,
-    color: "#555",
+  sheetSubtitle: {
+    fontSize: 14,
+    color: SAHBI.textMuted,
     textAlign: "center",
     fontFamily: "Poppins",
+    lineHeight: 22,
+    marginBottom: 8,
   },
-
-  button: {
-    padding: 16,
+  primaryOuter: {
+    marginTop: 8,
     borderRadius: 999,
+    overflow: "hidden",
+    width: "100%",
+    alignSelf: "center",
+  },
+  primaryBtn: {
+    paddingVertical: 16,
     alignItems: "center",
-    // backgroundColor: "#eba28a",
-    backgroundImage: "linear-gradient(-90deg, #2596be 0%, #eba28a 100%)",
+    justifyContent: "center",
   },
-
-  buttonWhite: {
-    borderWidth: 1,
-    backgroundImage: "none",
-    backgroundColor: "white",
-    borderColor: "#eba28a",
-  },
-
-  buttonText: {
+  primaryBtnText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#ffffff",
+    color: SAHBI.white,
     fontFamily: "Poppins",
   },
-
-  link: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#555",
-    textAlign: "center",
+  secondaryBtn: {
+    marginTop: 4,
+    paddingVertical: 16,
+    borderRadius: 999,
+    alignItems: "center",
+    backgroundColor: SAHBI.white,
+    borderWidth: 1,
+    borderColor: SAHBI.borderHairline,
+  },
+  secondaryBtnText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: SAHBI.black,
     fontFamily: "Poppins",
+  },
+  termsRow: {
+    marginTop: 16,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+  termsBase: {
+    fontSize: 11,
+    color: SAHBI.textMuted,
+    fontFamily: "Poppins",
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  termsLink: {
+    fontSize: 11,
+    color: SAHBI.textMuted,
+    fontFamily: "Poppins",
+    textDecorationLine: "underline",
   },
 });

@@ -99,8 +99,8 @@ export default function EventDetails() {
           resizeMode="cover"
         >
           <LinearGradient
-            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "#e85a4a"]}
-            locations={[0, 0.5, 1]}
+            colors={["rgba(0,0,0,0)", "rgba(233,134,110,0.55)", "#E9866E"]}
+            locations={[0, 0.45, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={styles.gradientOverlay}
@@ -112,7 +112,7 @@ export default function EventDetails() {
             activeOpacity={0.7}
           >
             <View style={styles.iconButtonInner}>
-              <Ionicons size={22} color="#333" name="chevron-back" />
+              <Ionicons size={26} color="#FFFFFF" name="chevron-back" />
             </View>
           </TouchableOpacity>
 
@@ -124,7 +124,7 @@ export default function EventDetails() {
             <View style={styles.iconButtonInner}>
               <Ionicons
                 size={22}
-                color={favorited ? "#c9a227" : "#333"}
+                color={favorited ? "#FFD54F" : "#FFFFFF"}
                 name={favorited ? "star" : "star-outline"}
               />
             </View>
@@ -132,9 +132,7 @@ export default function EventDetails() {
 
           <View style={styles.imageTextContainer}>
             <Text style={styles.title}>{event.title?.toUpperCase()}</Text>
-            <Text style={styles.tagline}>
-              {description.split(".")[0]}.
-            </Text>
+            <Text style={styles.tagline}>{description.split(".")[0]}.</Text>
           </View>
         </ImageBackground>
       </View>
@@ -177,7 +175,7 @@ export default function EventDetails() {
           <TouchableOpacity
             onPress={openTableGroupChat}
             activeOpacity={0.85}
-            style={styles.getTicketBtn}
+            style={styles.chatTicketBtn}
             disabled={openingChat}
           >
             <LinearGradient
@@ -206,19 +204,21 @@ export default function EventDetails() {
             activeOpacity={0.85}
             style={styles.getTicketBtn}
           >
-            <LinearGradient
-              end={{ x: 1, y: 0 }}
-              start={{ x: 0, y: 0 }}
-              style={styles.primaryBtn}
-              colors={["#e85a4a", "#f4866e"]}
-            >
-              <Text style={styles.primaryBtnText}>Get Ticket</Text>
+            <View style={styles.getTicketInner}>
+              <LinearGradient
+                end={{ x: 1, y: 0.5 }}
+                start={{ x: 0, y: 0.5 }}
+                style={styles.getTicketPill}
+                colors={["#F4866E", "#E9866E"]}
+              >
+                <Text style={styles.primaryBtnText}>Get Ticket</Text>
+              </LinearGradient>
               <View style={styles.chevrons}>
-                <Ionicons size={16} color="white" name="chevron-forward" />
-                <Ionicons size={16} color="white" name="chevron-forward" />
-                <Ionicons size={16} color="white" name="chevron-forward" />
+                <Ionicons size={18} color="#D0D0D0" name="chevron-forward" />
+                <Ionicons size={18} color="#D0D0D0" name="chevron-forward" />
+                <Ionicons size={18} color="#D0D0D0" name="chevron-forward" />
               </View>
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
         ) : null}
       </View>

@@ -172,7 +172,7 @@ export default function MyTicket() {
             </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity style={styles.statusBtnSecondary}>
-            <Text style={styles.statusBtnSecondaryText}>I'll be late</Text>
+            <Text style={styles.statusBtnSecondaryText}>{"I'll be late"}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.statusBtnSecondary}>
             <Text style={styles.statusBtnSecondaryText}>Cancel</Text>

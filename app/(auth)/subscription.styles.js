@@ -27,7 +27,6 @@ export const styles = StyleSheet.create({
   card: {
     gap: 16,
     padding: 20,
-    display: "grid",
     borderRadius: 16,
     backgroundColor: "#f5e9da",
   },

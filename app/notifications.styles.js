@@ -37,7 +37,7 @@ export const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   card: {
     padding: 16,

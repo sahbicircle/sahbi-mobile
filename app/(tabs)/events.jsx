@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatDate } from "../../helpers/functions.helper";
 import { useEvents } from "../../hooks/useEvents";
 import { styles } from "./events.styles";
@@ -22,7 +23,13 @@ const EventDetails = ({ item }) => {
           }}
           style={styles.cardImage}
         />
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text
+          style={styles.cardTitle}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {item.title}
+        </Text>
       </View>
 
       <View style={styles.cardContent}>
@@ -40,6 +47,7 @@ const EventDetails = ({ item }) => {
 };
 
 export default function Events() {
+  const insets = useSafeAreaInsets();
   const { events } = useEvents();
 
   return (
@@ -48,7 +56,10 @@ export default function Events() {
       keyExtractor={(e) => e._id}
       renderItem={({ item }) => <EventDetails item={item} />}
       ListHeaderComponent={() => <Text style={styles.title}>All Events</Text>}
-      contentContainerStyle={styles.main}
+      contentContainerStyle={[
+        styles.main,
+        { paddingTop: insets.top + 12 },
+      ]}
     />
   );
 }

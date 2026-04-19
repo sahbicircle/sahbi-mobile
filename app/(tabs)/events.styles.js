@@ -4,11 +4,11 @@ export const styles = StyleSheet.create({
   main: {
     gap: 16,
     flexGrow: 1,
-    paddingTop: 60,
+    paddingTop: 12,
     display: "flex",
     paddingLeft: 24,
     paddingRight: 24,
-    paddingBottom: 60,
+    paddingBottom: 120,
     flexDirection: "column",
     backgroundColor: "#faeeeb",
     alignContent: "space-between",
@@ -22,7 +22,6 @@ export const styles = StyleSheet.create({
   card: {
     gap: 16,
     padding: 16,
-    display: "grid",
     marginBottom: 12,
     borderRadius: 16,
     backgroundColor: "#e4a494",
@@ -45,6 +44,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
   },
   cardTitle: {
+    flex: 1,
     fontSize: 16,
     fontWeight: 600,
     fontFamily: "Poppins",
@@ -86,7 +86,6 @@ export const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 9999,
     paddingVertical: 4,
-    width: "fit-content",
     paddingHorizontal: 8,
     alignSelf: "flex-start",
     backgroundColor: "#FF4C42",

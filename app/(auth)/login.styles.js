@@ -1,104 +1,162 @@
 import { StyleSheet } from "react-native";
+import { SAHBI } from "../../constants/sahbiUi";
 
 export const styles = StyleSheet.create({
-  main: {
-    padding: 12,
+  scroll: {
     flexGrow: 1,
-    backgroundColor: "#fafafa",
   },
-
-  screenContainer: {
+  gradient: {
     flex: 1,
-    padding: 24,
-    borderRadius: 24,
-    justifyContent: "center",
+    flexDirection: "column",
+    paddingHorizontal: 24,
   },
-
-  screen: {
-    gap: 48,
-    flex: 1,
-    justifyContent: "center",
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 28,
   },
-
-  content: { gap: 16 },
-
-  centerBlock: { alignItems: "center", gap: 24 },
-
-  title: {
-    fontSize: 28,
-    color: "white",
-    lineHeight: 34,
-    marginBottom: 16,
+  logo: {
+    width: 36,
+    height: 36,
+    resizeMode: "contain",
+  },
+  brandText: {
+    fontSize: 22,
     fontWeight: "600",
+    color: SAHBI.white,
     fontFamily: "Poppins",
   },
-
+  title: {
+    fontSize: 26,
+    lineHeight: 32,
+    color: SAHBI.white,
+    fontWeight: "700",
+    fontFamily: "Poppins",
+    marginBottom: 14,
+  },
   description: {
     fontSize: 14,
-    color: "white",
-    marginBottom: 16,
+    lineHeight: 22,
+    color: "rgba(255,255,255,0.95)",
     fontFamily: "Poppins",
+    marginBottom: 28,
   },
-
-  subtitle: {
-    fontSize: 16,
-    color: "#999",
-    textAlign: "center",
-    fontFamily: "Poppins",
-  },
-
-  input: {
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderWidth: 1,
-    borderRadius: 999,
-    borderColor: "#ddd",
-    fontFamily: "Poppins",
-    backgroundColor: "#f7dccf",
-  },
-
-  primaryBtn: {
+  glassBtn: {
     width: "100%",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderRadius: 999,
-    paddingVertical: 14,
+    backgroundColor: SAHBI.frostedBtn,
     alignItems: "center",
-    backgroundColor: "#f7dccf",
+    justifyContent: "center",
   },
-
-  primaryBtnDisabled: {
-    opacity: 0.6,
-  },
-
-  primaryBtnText: { fontWeight: 600, fontFamily: "Poppins" },
-
-  link: {
-    color: "white",
-    fontWeight: 500,
-    textAlign: "center",
+  glassBtnText: {
+    fontSize: 16,
+    color: "#1A1A1A",
+    fontWeight: "500",
     fontFamily: "Poppins",
   },
-
-  divider: {
+  dividerRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginVertical: 18,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.5)",
+    backgroundColor: "rgba(255,255,255,0.55)",
   },
   dividerText: {
-    color: "white",
+    color: SAHBI.white,
+    fontSize: 13,
+    fontFamily: "Poppins",
+  },
+  emailToggle: {
+    marginTop: 12,
+    alignSelf: "center",
+    paddingVertical: 8,
+  },
+  emailToggleText: {
+    color: "rgba(255,255,255,0.9)",
     fontSize: 14,
+    fontFamily: "Poppins",
+    textDecorationLine: "underline",
+  },
+  emailBlock: {
+    gap: 12,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  phoneHint: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "rgba(255,255,255,0.88)",
+    fontFamily: "Poppins",
+    marginBottom: 4,
+  },
+  secondaryLink: {
+    marginTop: 4,
+    alignSelf: "flex-start",
+    paddingVertical: 6,
+  },
+  secondaryLinkText: {
+    color: "rgba(255,255,255,0.92)",
+    fontSize: 14,
+    fontFamily: "Poppins",
+    textDecorationLine: "underline",
+  },
+  input: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.35)",
+    fontFamily: "Poppins",
+    backgroundColor: "rgba(255,255,255,0.92)",
+    color: "#111",
+  },
+  primarySolid: {
+    width: "100%",
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
+  },
+  primarySolidText: {
+    fontWeight: "700",
+    fontFamily: "Poppins",
+    color: SAHBI.white,
+  },
+  link: {
+    color: SAHBI.white,
+    fontWeight: "500",
+    textAlign: "center",
+    fontFamily: "Poppins",
+    marginTop: 8,
+  },
+  footerLinks: {
+    paddingTop: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  footerText: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.85)",
+    fontFamily: "Poppins",
   },
   errorText: {
-    borderRadius: 999,
-    color: "#ea616a",
+    borderRadius: 12,
+    color: "#5c1010",
     textAlign: "center",
-    paddingVertical: 14,
+    paddingVertical: 10,
     fontFamily: "Poppins",
-    paddingHorizontal: 18,
-    backgroundColor: "#fdeeea",
+    paddingHorizontal: 12,
+    backgroundColor: "rgba(255,255,255,0.9)",
   },
 });

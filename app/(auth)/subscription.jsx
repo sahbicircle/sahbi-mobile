@@ -128,9 +128,14 @@ function getErrorMessage(err) {
   return "Registration failed. Please try again.";
 }
 
-export default function Subscription({ fromTicket = false }) {
+export default function Subscription() {
   const router = useRouter();
-  const { user } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const fromTicket =
+    params.fromTicket === true ||
+    params.fromTicket === "true" ||
+    params.fromTicket === "1";
+  const { user } = params;
   let parsedUser = null;
   try {
     parsedUser = user ? JSON.parse(user) : null;
@@ -179,18 +184,18 @@ export default function Subscription({ fromTicket = false }) {
       <ScrollView contentContainerStyle={styles.main} scrollEnabled={!loading}>
         <View style={styles.screen}>
           <View style={styles.content}>
-          {fromTicket ? null : (
-            <Text style={styles.title}>Choose your plan</Text>
-          )}
+            {fromTicket ? null : (
+              <Text style={styles.title}>Choose your plan</Text>
+            )}
 
-          {plans.map((p) => (
-            <Plan key={p?.name} plan={p} choose={choose} disabled={loading} />
-          ))}
+            {plans.map((p) => (
+              <Plan key={p?.name} plan={p} choose={choose} disabled={loading} />
+            ))}
+          </View>
+
+          <Text style={styles.trial}>7-day free trial — card required</Text>
         </View>
-
-        <Text style={styles.trial}>7-day free trial — card required</Text>
-      </View>
-    </ScrollView>
+      </ScrollView>
     </View>
   );
 }

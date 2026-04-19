@@ -2,9 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Dimensions,
   Image,
   ScrollView,
   Text,
@@ -12,18 +13,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DatePicker from "../../components/calendar/DatePicker";
-import { SocialAuthButtons } from "../../components/SocialAuthButtons";
+import { SAHBI } from "../../constants/sahbiUi";
 import { sendOtp, verifyOtp } from "../../services/auth.service";
 import { styles } from "./register.styles";
 
 export default function Register() {
   const router = useRouter();
   const { t } = useTranslation();
-
-  const onSocialSuccess = useCallback(() => {
-    router.replace("/(tabs)/home");
-  }, [router]);
+  const insets = useSafeAreaInsets();
+  const screenH = Dimensions.get("window").height;
 
   const [step, setStep] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -89,7 +89,7 @@ export default function Register() {
       case 4:
         return !!form.birthday;
       case 5:
-        return form.photos.length >= 0;
+        return form.photos.length >= 2;
       case 6:
         return form.gender;
       case 7:
@@ -191,14 +191,23 @@ export default function Register() {
   };
 
   const Option = ({ label, selected, onPress }) => (
-    <TouchableOpacity
-      style={[styles.option, selected && styles.optionSelected]}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-        {label}
-      </Text>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.88}>
+      {selected ? (
+        <LinearGradient
+          colors={SAHBI.gradientChip}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={[styles.option, styles.optionSelectedFill]}
+        >
+          <Text style={[styles.optionText, styles.optionTextOnFill]}>
+            {label}
+          </Text>
+        </LinearGradient>
+      ) : (
+        <View style={[styles.option, styles.optionOutline]}>
+          <Text style={styles.optionText}>{label}</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -209,15 +218,10 @@ export default function Register() {
       activeOpacity={0.85}
     >
       <LinearGradient
-        end={{ x: 1, y: 0 }}
-        start={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 0.5 }}
+        start={{ x: 0, y: 0.5 }}
         style={[styles.primaryBtn, disabled && styles.primaryBtnDisabled]}
-        locations={[0, 0.15, 0.65, 1]}
-        colors={
-          disabled
-            ? ["#ddd", "#ccc"]
-            : ["#6A78B8", "#84A8D8", "#B796A3", "#DD866E"]
-        }
+        colors={disabled ? ["#ddd", "#ccc"] : SAHBI.gradientCta}
       >
         <Text style={styles.primaryBtnText}>{label}</Text>
       </LinearGradient>
@@ -366,79 +370,77 @@ export default function Register() {
 
   const MAX_PHOTOS = 6;
 
+  if (step === 0) {
+    return (
+      <LinearGradient
+        colors={SAHBI.gradientWarmVertical}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={[
+          styles.onboardingRoot,
+          { paddingTop: insets.top + 8, minHeight: screenH },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.backBtnOnboarding}
+          onPress={() => router.replace("/(auth)/intro")}
+        >
+          <Ionicons size={22} color="#C97B68" name="chevron-back" />
+        </TouchableOpacity>
+        <View style={styles.onboardingBody}>
+          <Text style={styles.onboardingHi}>{t("register.onboarding.hi")}</Text>
+          <Text style={styles.onboardingStat}>{t("register.onboarding.stat")}</Text>
+          <Text style={styles.onboardingSub}>
+            {t("register.onboarding.statSub")}
+          </Text>
+          <Image
+            source={require("../../assets/images/step0.png")}
+            style={styles.onboardingIllustration}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={[styles.onboardingFooter, { paddingBottom: insets.bottom + 24 }]}>
+          <GradientButton onPress={next} />
+          <TouchableOpacity onPress={next} style={styles.skipLink}>
+            <Text style={styles.skipTextDark}>{t("register.onboarding.skip")}</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.main}>
       {step > 0 && (
         <TouchableOpacity style={styles.backBtn} onPress={back}>
-          <Ionicons size={24} color="#eba28a" name="arrow-back-outline" />
+          <Ionicons size={24} color="#E8937E" name="chevron-back" />
         </TouchableOpacity>
-      )}
-
-      {/* STEP 0 — Welcome */}
-      {step === 0 && (
-        <View style={styles.screen}>
-          <Text style={{ ...styles.title, textAlign: "center" }}>
-            {t("register.welcomeTitle")}
-          </Text>
-
-          <View style={styles.centerBlock}>
-            <Image
-              source={require("../../assets/images/step0.png")}
-              style={{ width: 300, height: 300 }}
-            />
-            <Text style={{ ...styles.title, textAlign: "center" }}>
-              {t("register.welcomeSubtitle")}
-            </Text>
-            <Text style={styles.subtitle}>{t("register.welcomeDesc")}</Text>
-          </View>
-
-          <View style={styles.buttonBlock}>
-            <SocialAuthButtons
-              onSuccess={onSocialSuccess}
-              disabled={disabled}
-            />
-
-            <View style={styles.registerDivider}>
-              <View style={styles.registerDividerLine} />
-              <Text style={styles.registerDividerText}>
-                {t("login.or", "or")}
-              </Text>
-              <View style={styles.registerDividerLine} />
-            </View>
-
-            <GradientButton label={t("register.letsGo")} onPress={next} />
-
-            <TouchableOpacity
-              onPress={() => router.push("/(auth)/login")}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.link}>{t("register.alreadyAccount")}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       )}
 
       {/* STEP 1 — First & Last Name */}
       {step === 1 && (
         <View style={styles.screen}>
           <View style={styles.content}>
-            <Text style={styles.title}>{t("register.name.title")}</Text>
+            <Text style={styles.title}>{t("register.name.firstNameTitle")}</Text>
 
             <TextInput
-              placeholderTextColor="#888"
-              style={styles.input}
+              placeholderTextColor="#B0B0B0"
+              style={styles.inputUnderline}
               placeholder={t("register.firstName")}
               value={form.firstName}
               onChangeText={(v) => update("firstName", v)}
             />
 
             <TextInput
-              placeholderTextColor="#888"
-              style={styles.input}
+              placeholderTextColor="#B0B0B0"
+              style={styles.inputUnderline}
               placeholder={t("register.lastName")}
               value={form.lastName}
               onChangeText={(v) => update("lastName", v)}
             />
+
+            <Text style={styles.profileHint}>{t("register.name.profileHint1")}</Text>
+            <Text style={styles.profileHintBold}>{t("register.name.profileHint2")}</Text>
           </View>
 
           <GradientButton disabled={disabled} onPress={next} />
@@ -517,7 +519,7 @@ export default function Register() {
                         setOtpLoading(false);
                       }
                     }}
-                    disabled //={!isValidPhone(form.phoneNumber) || otpLoading}
+                    disabled={!isValidPhone(form.phoneNumber) || otpLoading}
                   />
                 ) : (
                   <>
@@ -599,6 +601,7 @@ export default function Register() {
               update={update}
               setShow={setShowCalendar}
             />
+            <Text style={styles.birthdayHint}>{t("register.birthday.hint")}</Text>
           </View>
 
           <GradientButton disabled={disabled} onPress={next} />
@@ -610,6 +613,7 @@ export default function Register() {
         <View style={styles.screen}>
           <View style={styles.content}>
             <Text style={styles.title}>{t("register.photos.title")}</Text>
+            <Text style={styles.photoSubtitle}>{t("register.photos.subtitle")}</Text>
 
             <View style={styles.photoGrid}>
               {Array.from({ length: MAX_PHOTOS }).map((_, index) => {
@@ -626,7 +630,7 @@ export default function Register() {
                       <Image source={{ uri }} style={styles.photoThumb} />
                     ) : (
                       <View style={styles.plusBox}>
-                        <Ionicons name="add" size={30} color="#bbb" />
+                        <Ionicons name="add" size={28} color="#6B6B6B" />
                       </View>
                     )}
                   </TouchableOpacity>
@@ -894,7 +898,7 @@ export default function Register() {
               {t("register.favoriteTopics.title")}
             </Text>
 
-            <View style={styles.grid}>
+            <View style={styles.topicsList}>
               {favoriteTopicsOptions.map((opt) => (
                 <Option
                   key={opt.value}

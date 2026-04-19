@@ -1,22 +1,79 @@
 import { StyleSheet } from "react-native";
+import { SAHBI } from "../../constants/sahbiUi";
 
 export const styles = StyleSheet.create({
+  onboardingRoot: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: "space-between",
+  },
+  backBtnOnboarding: {
+    alignSelf: "flex-start",
+    paddingVertical: 8,
+    paddingRight: 12,
+  },
+  onboardingBody: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 8,
+  },
+  onboardingHi: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: SAHBI.black,
+    fontFamily: "Poppins",
+    marginBottom: 20,
+  },
+  onboardingStat: {
+    fontSize: 72,
+    fontWeight: "800",
+    color: SAHBI.black,
+    fontFamily: "Poppins",
+    lineHeight: 80,
+  },
+  onboardingSub: {
+    marginTop: 12,
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#333",
+    textAlign: "center",
+    fontFamily: "Poppins",
+    paddingHorizontal: 12,
+    maxWidth: 340,
+  },
+  onboardingIllustration: {
+    width: 280,
+    height: 220,
+    marginTop: 24,
+  },
+  onboardingFooter: {
+    gap: 16,
+    width: "100%",
+  },
+  skipTextDark: {
+    color: "#8A6A62",
+    fontSize: 15,
+    fontFamily: "Poppins",
+    textAlign: "center",
+  },
+
   main: {
     flexGrow: 1,
-    paddingTop: 60,
+    paddingTop: 56,
     paddingLeft: 24,
     paddingRight: 24,
-    paddingBottom: 60,
-    backgroundColor: "#fafafa",
+    paddingBottom: 48,
+    backgroundColor: SAHBI.white,
   },
 
   screen: {
     flex: 1,
     justifyContent: "space-between",
+    minHeight: 480,
   },
 
   content: {
-    gap: 16,
+    gap: 14,
   },
 
   centerBlock: {
@@ -25,10 +82,11 @@ export const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 28,
-    lineHeight: 34,
-    marginBottom: 16,
-    fontWeight: "600",
+    fontSize: 26,
+    lineHeight: 32,
+    marginBottom: 8,
+    fontWeight: "700",
+    color: SAHBI.black,
     fontFamily: "Poppins",
   },
 
@@ -64,28 +122,73 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  option: {
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderWidth: 1,
-    borderRadius: 999,
-    borderColor: "#ddd",
-    alignItems: "center",
+  inputUnderline: {
+    borderBottomWidth: 2,
+    borderBottomColor: SAHBI.accentPink,
+    paddingVertical: 12,
+    fontSize: 18,
+    fontFamily: "Poppins",
+    color: SAHBI.black,
   },
 
-  optionSelected: {
-    backgroundColor: "#eba28a",
-    borderColor: "#eba28a",
+  profileHint: {
+    fontSize: 13,
+    color: SAHBI.textMuted,
+    fontFamily: "Poppins",
+    marginTop: 8,
+  },
+  profileHintBold: {
+    fontSize: 13,
+    color: "#444",
+    fontWeight: "600",
+    fontFamily: "Poppins",
+  },
+
+  birthdayHint: {
+    fontSize: 13,
+    color: SAHBI.textMuted,
+    fontFamily: "Poppins",
+    marginTop: 12,
+  },
+
+  photoSubtitle: {
+    fontSize: 14,
+    color: SAHBI.textMuted,
+    fontFamily: "Poppins",
+    marginBottom: 8,
+  },
+
+  option: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  optionOutline: {
+    backgroundColor: SAHBI.white,
+    borderWidth: 1,
+    borderColor: SAHBI.borderHairline,
+  },
+
+  optionSelectedFill: {
+    borderWidth: 0,
   },
 
   optionText: {
     fontSize: 16,
-    color: "#111",
+    color: SAHBI.black,
     fontFamily: "Poppins",
   },
 
-  optionTextSelected: {
-    color: "#fff",
+  optionTextOnFill: {
+    color: SAHBI.black,
+    fontWeight: "500",
+  },
+
+  topicsList: {
+    gap: 12,
   },
 
   grid: {
@@ -97,7 +200,10 @@ export const styles = StyleSheet.create({
   photoGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 16,
+    marginTop: 8,
+    justifyContent: "center",
+    maxWidth: 360,
+    alignSelf: "center",
   },
 
   photoWrapper: {
@@ -107,19 +213,19 @@ export const styles = StyleSheet.create({
 
   photoThumb: {
     width: "100%",
-    aspectRatio: 1,
-    borderRadius: 14,
+    aspectRatio: 3 / 4,
+    borderRadius: 16,
   },
 
   plusBox: {
     width: "100%",
-    aspectRatio: 1,
-    borderRadius: 14,
-    backgroundColor: "#f3f3f3",
+    aspectRatio: 3 / 4,
+    borderRadius: 16,
+    backgroundColor: SAHBI.peachLight,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#B8B8B8",
   },
 
   photoPicker: {
@@ -131,11 +237,11 @@ export const styles = StyleSheet.create({
 
   backBtn: {
     marginBottom: 12,
+    alignSelf: "flex-start",
   },
 
   buttonBlock: {
     gap: 16,
-    display: "grid",
   },
 
   stepActions: {
@@ -153,7 +259,7 @@ export const styles = StyleSheet.create({
 
   link: {
     color: "#555",
-    fontWeight: 500,
+    fontWeight: "500",
     textAlign: "center",
     fontFamily: "Poppins",
   },
@@ -161,7 +267,7 @@ export const styles = StyleSheet.create({
   primaryBtn: {
     width: "100%",
     borderRadius: 999,
-    paddingVertical: 14,
+    paddingVertical: 16,
     alignItems: "center",
   },
 
@@ -173,6 +279,7 @@ export const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontFamily: "Poppins",
+    fontSize: 16,
   },
 
   errorText: {

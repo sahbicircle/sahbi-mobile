@@ -2,11 +2,35 @@ import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   input: {
-    height: 52,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    minHeight: 56,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     justifyContent: "center",
-    backgroundColor: "#f4f6fa",
+    alignItems: "center",
+    backgroundColor: "transparent",
+  },
+  dmyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dmyPart: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#111",
+    fontFamily: "Poppins",
+  },
+  dmySlash: {
+    fontSize: 22,
+    fontWeight: "500",
+    color: "#E8937E",
+    fontFamily: "Poppins",
+  },
+  placeholderGhost: {
+    fontSize: 22,
+    fontWeight: "500",
+    color: "#CFCFCF",
+    fontFamily: "Poppins",
   },
 
   inputText: {

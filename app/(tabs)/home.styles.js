@@ -1,29 +1,49 @@
 import { StyleSheet } from "react-native";
+import { SAHBI } from "../../constants/sahbiUi";
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#faeeeb",
+    backgroundColor: SAHBI.bgPeach,
   },
   scrollContent: {
     gap: 16,
     flexGrow: 1,
-    display: "grid",
-    paddingTop: 60,
+    paddingTop: 0,
     paddingLeft: 24,
     paddingRight: 24,
-    paddingBottom: 40,
-    backgroundColor: "#faeeeb",
+    paddingBottom: 120,
+    backgroundColor: SAHBI.bgPeach,
   },
-  bigTitle: {
-    fontSize: 32,
-    fontWeight: 700,
+  headlineSerif1: {
+    fontSize: 30,
+    fontWeight: "700",
     fontFamily: "Jazmin",
+    color: "#111",
+    marginTop: 8,
+  },
+  headlineSerif2: {
+    fontSize: 34,
+    fontWeight: "700",
+    fontFamily: "Jazmin",
+    color: "#8A8A8A",
+    marginBottom: 8,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 700,
+    fontSize: 18,
+    fontWeight: "700",
     fontFamily: "Poppins",
+    color: "#111",
+  },
+  bellCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#C8C8C8",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
   },
   description: {
     fontSize: 12,
@@ -40,10 +60,16 @@ export const styles = StyleSheet.create({
   card: {
     gap: 16,
     padding: 16,
-    display: "grid",
     marginBottom: 12,
     borderRadius: 24,
-    backgroundColor: "#e4a494",
+    backgroundColor: SAHBI.salmonCard,
+  },
+  cardBlue: {
+    gap: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 24,
+    backgroundColor: SAHBI.padelBlue,
   },
   cradHeader: {
     gap: 16,
@@ -63,14 +89,12 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
   },
   cardTitle: {
-    fontSize: 24,
+    flex: 1,
+    fontSize: 22,
     color: "white",
-    fontWeight: 600,
+    fontWeight: "700",
     fontFamily: "Poppins",
-    maxWidth: 300,
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
+    letterSpacing: 0.5,
   },
   cardMetaContainer: {
     gap: 4,
@@ -108,7 +132,6 @@ export const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 9999,
     paddingVertical: 4,
-    width: "fit-content",
     paddingHorizontal: 8,
     alignSelf: "flex-start",
     backgroundColor: "#FF4C42",
@@ -122,22 +145,24 @@ export const styles = StyleSheet.create({
   },
 
   feedbackCard: {
-    padding: 16,
-    borderRadius: 24,
+    padding: 18,
+    borderRadius: 28,
     alignItems: "center",
     flexDirection: "row",
-    backgroundColor: "#f5e9da",
-    border: "1px solid gray",
     justifyContent: "space-between",
+    minHeight: 140,
+    width: 300,
   },
   feedbackCardImage: {
-    width: 140,
-    height: 140,
+    width: 120,
+    height: 120,
   },
   feedbackCardText: {
     gap: 8,
     fontFamily: "Poppins",
-    alignItems: "center",
+    alignItems: "flex-start",
+    flex: 1,
+    paddingRight: 8,
   },
   feedbackBtn: {
     borderRadius: 999,
@@ -145,5 +170,10 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     backgroundColor: "white",
+  },
+
+  /** Horizontal “How was your group?” carousel row */
+  section: {
+    marginBottom: 8,
   },
 });

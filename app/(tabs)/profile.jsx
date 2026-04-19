@@ -1,23 +1,28 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
-import { useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   Image,
+  Modal,
   ScrollView,
+  StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
 import { CompleteProfileForm } from "../../components/CompleteProfileForm";
 import { useAuth } from "../../hooks/useAuth";
 import { useBookings } from "../../hooks/useBooking";
-import { useNotifications } from "../../hooks/useNotifications";
 import { cancelBooking } from "../../services/booking.service";
 import { updateProfile } from "../../services/profile.service";
 import { clearAuth, getAuth, setAuth } from "../../store/auth.store";
@@ -42,9 +47,9 @@ let didNavigateToVerification = false;
 
 export default function Profile() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, profileCompletion, refresh } = useAuth();
   const { bookings, refetch: refetchBookings } = useBookings();
-  const { unreadCount } = useNotifications();
 
   const [tempValue, setTempValue] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -66,6 +71,21 @@ export default function Profile() {
   const [showInterests, setShowInterests] = useState(false);
   const [showPhotoEditor, setShowPhotoEditor] = useState(false);
   const [savingPhotos, setSavingPhotos] = useState(false);
+  const [showCityModal, setShowCityModal] = useState(false);
+  const [cityDraft, setCityDraft] = useState("");
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [settingsSheetVisible, setSettingsSheetVisible] = useState(false);
+  const [bookingsSheetVisible, setBookingsSheetVisible] = useState(false);
+  const carouselRef = useRef(null);
+  const screenW = Dimensions.get("window").width;
+
+  const scrollCarouselTo = (index) => {
+    carouselRef.current?.scrollTo({
+      x: index * screenW,
+      animated: true,
+    });
+    setCarouselIndex(index);
+  };
 
   const photoUrls = Array.isArray(fullUser?.photoUrl ?? user?.photoUrl)
     ? fullUser?.photoUrl ?? user?.photoUrl ?? []
@@ -121,7 +141,9 @@ export default function Profile() {
   };
 
   const toggleInterest = (interest) => {
-    const current = Array.isArray(tempValue) ? tempValue : (user?.interests || []);
+    const current = Array.isArray(tempValue)
+      ? tempValue
+      : user?.interests || [];
     const updated = current.includes(interest)
       ? current.filter((i) => i !== interest)
       : [...current, interest];
@@ -202,6 +224,47 @@ export default function Profile() {
     }
   };
 
+  const eventsCount = bookings?.length ?? 0;
+  const peopleMetEstimate = Math.min(99, eventsCount * 5);
+
+  const openAccountSecurity = () => {
+    Alert.alert("Login & security", undefined, [
+      {
+        text: "Change password",
+        onPress: () => router.push("/(auth)/forgot-password"),
+      },
+      {
+        text: "Face verification",
+        onPress: () =>
+          router.push({
+            pathname: "/(auth)/face-verification",
+            params: { from: "profile" },
+          }),
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
+  const openSettingsSheet = () => setSettingsSheetVisible(true);
+
+  const openCityEditor = () => {
+    setCityDraft(user?.city || "");
+    setShowCityModal(true);
+  };
+
+  const saveCity = async () => {
+    try {
+      const updated = await updateProfile({ city: cityDraft.trim() });
+      const auth = await getAuth();
+      await setAuth(updated, auth.token);
+      setFullUser(updated);
+      refresh();
+      setShowCityModal(false);
+    } catch {
+      Alert.alert("Error", "Could not save city.");
+    }
+  };
+
   // if (loading) {
   //   return (
   //     <View style={styles.container}>
@@ -229,510 +292,812 @@ export default function Profile() {
           }}
         >
           <ActivityIndicator size="large" color="#eba28a" />
-          <Text style={{ marginTop: 12, fontSize: 16, color: "#333", fontFamily: "Poppins" }}>
+          <Text
+            style={{
+              marginTop: 12,
+              fontSize: 16,
+              color: "#333",
+              fontFamily: "Poppins",
+            }}
+          >
             Verifying your profile...
           </Text>
         </View>
       )}
-    <ScrollView contentContainerStyle={styles.main}>
-      <View style={styles.imageContainer}>
-        <View
-          style={{
-            width: PROFILE_IMAGE_SIZE,
-            height: PROFILE_IMAGE_SIZE,
-            position: "relative",
-          }}
-        >
-          {(fullUser?.faceVerified || user?.faceVerified) && (
-            <View
-              style={{
-                position: "absolute",
-                bottom: 4,
-                right: 4,
-                zIndex: 10,
-                backgroundColor: "#2596be",
-                borderRadius: 14,
-                width: 28,
-                height: 28,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="checkmark-circle" size={22} color="white" />
-            </View>
-          )}
-          <Svg width={PROFILE_IMAGE_SIZE} height={PROFILE_IMAGE_SIZE}>
-            <Circle
-              stroke="#000"
-              cx={PROFILE_IMAGE_SIZE / 2}
-              cy={PROFILE_IMAGE_SIZE / 2}
-              r={RADIUS}
-              strokeWidth={STROKE_WIDTH}
-            />
-
-            <Circle
-              stroke="#eba28a"
-              cx={PROFILE_IMAGE_SIZE / 2}
-              cy={PROFILE_IMAGE_SIZE / 2}
-              r={RADIUS}
-              strokeWidth={STROKE_WIDTH}
-              strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-              strokeDashoffset={
-                CIRCUMFERENCE - (profileCompletion / 100) * CIRCUMFERENCE
-              }
-              strokeLinecap="round"
-              transform={`rotate(-90, ${PROFILE_IMAGE_SIZE / 2}, ${
-                PROFILE_IMAGE_SIZE / 2
-              })`}
-            />
-          </Svg>
-
-          <Image
-            source={{ uri: primaryPhoto }}
-            style={{
-              ...styles.profileImage,
-              width: PROFILE_IMAGE_SIZE - STROKE_WIDTH * 2,
-              height: PROFILE_IMAGE_SIZE - STROKE_WIDTH * 2,
-              borderRadius: (PROFILE_IMAGE_SIZE - STROKE_WIDTH * 2) / 2,
-              top: STROKE_WIDTH,
-              left: STROKE_WIDTH,
-            }}
-            resizeMode="cover"
-          />
-
-          <View style={{ ...styles.percentage, width: PROFILE_IMAGE_SIZE }}>
-            <Text style={styles.percentageText}>
-              {profileCompletion}% Completed
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.profileNameContainer}>
-        <Text style={styles.profileName}>
-          {user?.firstName || ""} {user?.lastName || ""}
-        </Text>
-      </View>
-      <TouchableOpacity
-        style={[
-          styles.verifyCard,
-          (fullUser?.faceVerified || user?.faceVerified) && {
-            backgroundColor: "#5cb85c",
-            opacity: 0.9,
-          },
-        ]}
-        onPress={() => {
-          if (fullUser?.faceVerified || user?.faceVerified) return;
-          didNavigateToVerification = true;
-          router.push({
-            pathname: "/(auth)/face-verification",
-            params: { from: "profile" },
-          });
-        }}
-        disabled={!!(fullUser?.faceVerified || user?.faceVerified)}
+      <LinearGradient
+        colors={["#FAD6C8", "#F8E4DC", "#FFF2ED", "#FFF5F0"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.screenGradient}
       >
-        <View style={styles.verifyCardInner}>
-          <Ionicons
-            size={24}
-            name={
-              fullUser?.faceVerified || user?.faceVerified
-                ? "shield-checkmark"
-                : "shield-checkmark-outline"
-            }
-            color="white"
-          />
-          <View style={styles.verifyContainer}>
-            <Text style={[styles.verifyTitle, { color: "white" }]}>
-              {fullUser?.faceVerified || user?.faceVerified
-                ? "Profile verified"
-                : "Verify your profile"}
-            </Text>
-            <Text
-              style={[
-                styles.verifyDescription,
-                { color: "rgba(255,255,255,0.9)" },
-              ]}
-            >
-              {fullUser?.faceVerified || user?.faceVerified
-                ? "Face verified"
-                : "To get more fun"}
-            </Text>
-          </View>
-        </View>
-        {!(fullUser?.faceVerified || user?.faceVerified) && (
-          <Ionicons size={24} color="white" name="arrow-forward-outline" />
-        )}
-      </TouchableOpacity>
-      {profileCompletion < 100 && (
-        <TouchableOpacity
-          style={styles.completeProfileCard}
-          onPress={() => setShowCompleteProfile(!showCompleteProfile)}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
         >
-          <View style={styles.verifyCardInner}>
-            <Ionicons size={24} name="person-add-outline" color="#eba28a" />
-            <View style={styles.verifyContainer}>
-              <Text style={styles.verifyTitle}>Complete your profile</Text>
-              <Text style={styles.verifyDescription}>
-                Add personality details for better matching
-              </Text>
+          <LinearGradient
+            colors={["#FAD6C8", "#F4B8A8", "#F0C4B0"]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={[styles.headerGradient, { paddingTop: insets.top + 10 }]}
+          >
+            <View style={styles.topRow}>
+              <TouchableOpacity
+                style={styles.backHit}
+                onPress={() =>
+                  router.canGoBack()
+                    ? router.back()
+                    : router.replace("/(tabs)/home")
+                }
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push("/(tabs)/chats")}>
+                <Text style={styles.topLink}>Connect</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-          <Ionicons
-            size={24}
-            name={showCompleteProfile ? "chevron-up" : "chevron-down"}
-            color="#eba28a"
-          />
-        </TouchableOpacity>
-      )}
-      {showCompleteProfile && (
-        <View style={styles.completeProfileForm}>
-          <CompleteProfileForm
-            user={fullUser || user}
-            onSaved={() => {
-              refresh();
-              setShowCompleteProfile(false);
-            }}
-          />
-        </View>
-      )}
 
-      <TouchableOpacity
-        style={styles.selectCard}
-        onPress={() => setShowPhotoEditor(!showPhotoEditor)}
-      >
-        <View style={styles.selectContainer}>
-          <Text style={styles.selectTitle}>My Photos</Text>
-          <Text style={styles.selectDescription}>
-            {photoUrls.length} photo{photoUrls.length !== 1 ? "s" : ""}
-          </Text>
-        </View>
-        <Ionicons
-          size={24}
-          color="white"
-          name={showPhotoEditor ? "chevron-up" : "chevron-down"}
-        />
-      </TouchableOpacity>
-      {showPhotoEditor && (
-        <View style={styles.completeProfileForm}>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-            {photoUrls.map((uri, index) => (
-              <View key={index} style={{ position: "relative" }}>
-                <Image
-                  source={{ uri }}
-                  style={{ width: 80, height: 80, borderRadius: 8 }}
-                  resizeMode="cover"
-                />
-                <View style={{ flexDirection: "row", marginTop: 4, gap: 4 }}>
-                  {index > 0 && (
-                    <TouchableOpacity
-                      onPress={() => handleSetPrimaryPhoto(index)}
-                      style={{
-                        padding: 4,
-                        backgroundColor: "#2596be",
-                        borderRadius: 4,
-                      }}
-                    >
-                      <Text style={{ color: "white", fontSize: 10 }}>Main</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity
-                    onPress={() => handleRemovePhoto(index)}
-                    style={{
-                      padding: 4,
-                      backgroundColor: "#FF4C42",
-                      borderRadius: 4,
-                    }}
-                  >
-                    <Text style={{ color: "white", fontSize: 10 }}>Remove</Text>
-                  </TouchableOpacity>
-                </View>
-                {index === 0 && (
+            <View style={styles.headerSecondRow}>
+              <TouchableOpacity
+                style={styles.sideIconBtn}
+                onPress={openSettingsSheet}
+                accessibilityLabel="Settings"
+              >
+                <Ionicons name="settings-outline" size={22} color="#666" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.sideIconBtn}
+                onPress={() => setShowCompleteProfile((s) => !s)}
+                accessibilityLabel="Edit profile"
+              >
+                <Ionicons name="create-outline" size={22} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.avatarCenter}>
+              <View style={styles.imageWrap}>
+                {(fullUser?.faceVerified || user?.faceVerified) && (
                   <View
                     style={{
                       position: "absolute",
                       top: 2,
-                      left: 2,
+                      right: 2,
+                      zIndex: 10,
                       backgroundColor: "#2596be",
-                      paddingHorizontal: 4,
-                      borderRadius: 4,
+                      borderRadius: 14,
+                      width: 26,
+                      height: 26,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <Text style={{ color: "white", fontSize: 9 }}>Main</Text>
+                    <Ionicons name="checkmark-circle" size={20} color="white" />
                   </View>
                 )}
+                <Svg width={PROFILE_IMAGE_SIZE} height={PROFILE_IMAGE_SIZE}>
+                  <Circle
+                    stroke="rgba(255,255,255,0.95)"
+                    cx={PROFILE_IMAGE_SIZE / 2}
+                    cy={PROFILE_IMAGE_SIZE / 2}
+                    r={RADIUS}
+                    strokeWidth={STROKE_WIDTH}
+                  />
+                  <Circle
+                    stroke="#E9866E"
+                    cx={PROFILE_IMAGE_SIZE / 2}
+                    cy={PROFILE_IMAGE_SIZE / 2}
+                    r={RADIUS}
+                    strokeWidth={STROKE_WIDTH}
+                    strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
+                    strokeDashoffset={
+                      CIRCUMFERENCE -
+                      (Math.min(100, profileCompletion || 0) / 100) *
+                        CIRCUMFERENCE
+                    }
+                    strokeLinecap="round"
+                    transform={`rotate(-90, ${PROFILE_IMAGE_SIZE / 2}, ${
+                      PROFILE_IMAGE_SIZE / 2
+                    })`}
+                  />
+                </Svg>
+                <Image
+                  source={{ uri: primaryPhoto }}
+                  style={{
+                    ...styles.profileImage,
+                    width: PROFILE_IMAGE_SIZE - STROKE_WIDTH * 2,
+                    height: PROFILE_IMAGE_SIZE - STROKE_WIDTH * 2,
+                    borderRadius: (PROFILE_IMAGE_SIZE - STROKE_WIDTH * 2) / 2,
+                    top: STROKE_WIDTH,
+                    left: STROKE_WIDTH,
+                  }}
+                  resizeMode="cover"
+                />
+                <View style={styles.percentage}>
+                  <Text style={styles.percentageText}>
+                    {Math.round(profileCompletion || 0)}% complete
+                  </Text>
+                </View>
               </View>
-            ))}
+            </View>
+
+            <Text style={styles.profileName}>
+              {[user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+                "Sahbi"}
+            </Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statBlock}>
+                <Text style={styles.statNumber}>{eventsCount}</Text>
+                <Text style={styles.statLabel}>Events</Text>
+              </View>
+              <View style={styles.statBlock}>
+                <Text style={styles.statNumber}>{peopleMetEstimate}</Text>
+                <Text style={styles.statLabel}>People met</Text>
+              </View>
+            </View>
+          </LinearGradient>
+
+          <View style={{ width: screenW, paddingHorizontal: 20 }}>
             <TouchableOpacity
-              onPress={handleAddPhoto}
-              disabled={savingPhotos}
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 8,
-                backgroundColor: "#eee",
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 2,
-                borderStyle: "dashed",
-                borderColor: "#999",
+              onPress={() => {
+                if (fullUser?.faceVerified || user?.faceVerified) return;
+                didNavigateToVerification = true;
+                router.push({
+                  pathname: "/(auth)/face-verification",
+                  params: { from: "profile" },
+                });
               }}
+              disabled={!!(fullUser?.faceVerified || user?.faceVerified)}
+              activeOpacity={0.92}
             >
-              <Ionicons name="add" size={32} color="#999" />
+              {fullUser?.faceVerified || user?.faceVerified ? (
+                <View style={[styles.verifyCard, styles.verifyCardVerified]}>
+                  <View style={styles.verifyCardInner}>
+                    <View style={styles.shieldWrap}>
+                      <Ionicons
+                        name="shield-checkmark"
+                        size={22}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                    <View style={styles.verifyContainer}>
+                      <Text style={[styles.verifyTitle, { color: "#fff" }]}>
+                        Profile verified
+                      </Text>
+                      <Text
+                        style={[
+                          styles.verifySubtitle,
+                          styles.verifySubtitleMuted,
+                        ]}
+                      >
+                        Face verified
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={22} color="#fff" />
+                </View>
+              ) : (
+                <LinearGradient
+                  colors={["#D8EBFA", "#B9D8F0", "#A8CEEC"]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={styles.verifyCard}
+                >
+                  <View style={styles.verifyCardInner}>
+                    <View style={styles.shieldWrap}>
+                      <Ionicons
+                        name="shield-checkmark"
+                        size={22}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                    <View style={styles.verifyContainer}>
+                      <Text style={styles.verifyTitle}>
+                        Verify your profile
+                      </Text>
+                      <Text style={styles.verifySubtitle}>to get for fun</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={22} color="#333" />
+                </LinearGradient>
+              )}
             </TouchableOpacity>
           </View>
-          {savingPhotos && (
-            <Text style={{ marginTop: 8, color: "#666", fontSize: 12 }}>
-              Saving...
-            </Text>
-          )}
-        </View>
-      )}
-      <TouchableOpacity
-        style={styles.subscribeCard}
-        onPress={() => router.push("/(tabs)/notifications")}
-      >
-        <View style={styles.subscribeContainer}>
-          <Text style={styles.subscribeTitle}>Notifications</Text>
-          <Text style={styles.subscribeDescription}>
-            {unreadCount > 0
-              ? `${unreadCount} unread`
-              : "App updates and announcements"}
-          </Text>
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          {unreadCount > 0 && (
-            <View
-              style={{
-                minWidth: 20,
-                height: 20,
-                borderRadius: 10,
-                backgroundColor: "#FF4C42",
-                alignItems: "center",
-                justifyContent: "center",
-                paddingHorizontal: 6,
-              }}
+
+          <View style={{ width: screenW, paddingHorizontal: 20 }}>
+            <View style={styles.subscribeWrap}>
+              <LinearGradient
+                colors={["#F8D4C8", "#F0A090", "#E9866E"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.subscribeGradient}
+              >
+                <View style={styles.subscribeBadgeRow}>
+                  <LinearGradient
+                    colors={["#6E7FB8", "#E8B4A8", "#F6C7B9"]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={styles.basicBadge}
+                  >
+                    <Text style={styles.basicBadgeText}>Basic</Text>
+                  </LinearGradient>
+                  <Text style={styles.subscribeHead}>Subscribe</Text>
+                </View>
+                <Text style={styles.subscribeDesc}>
+                  verified friends only! Custom Just for you
+                </Text>
+                <TouchableOpacity
+                  style={styles.saveCtaOuter}
+                  activeOpacity={0.9}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(auth)/subscription",
+                      params: { fromTicket: "true" },
+                    })
+                  }
+                >
+                  <LinearGradient
+                    colors={["#ED967F", "#7A6BA8", "#6E7FB8"]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={styles.saveCtaGradient}
+                  >
+                    <Text style={styles.saveCtaText}>Save Up to 60%</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </LinearGradient>
+            </View>
+          </View>
+
+          <View style={styles.body}>
+            <Text style={styles.sectionLabel}>Account</Text>
+            <TouchableOpacity
+              style={styles.listRow}
+              onPress={openAccountSecurity}
+              activeOpacity={0.85}
             >
-              <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </Text>
+              <Text style={styles.listRowTitle}>Login and security</Text>
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </TouchableOpacity>
+
+            <Text style={styles.sectionLabel}>Preferences</Text>
+            <TouchableOpacity
+              style={styles.listRow}
+              onPress={openCityEditor}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.listRowTitle}>City</Text>
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </TouchableOpacity>
+          </View>
+          {showCompleteProfile && (
+            <View
+              style={[styles.completeProfileForm, { marginHorizontal: 20 }]}
+            >
+              <CompleteProfileForm
+                user={fullUser || user}
+                onSaved={() => {
+                  refresh();
+                  setShowCompleteProfile(false);
+                }}
+              />
             </View>
           )}
-          <Ionicons size={24} color="white" name="arrow-forward-outline" />
-        </View>
-      </TouchableOpacity>
-      <View style={styles.subscribeCard}>
-        <View style={styles.subscribeContainer}>
-          <Text style={styles.subscribeTitle}>Subscribe</Text>
-          <Text style={styles.subscribeDescription}>
-            verified friends only! Custom Just for you
-          </Text>
-        </View>
 
-        <Ionicons size={24} color="white" name="arrow-forward-outline" />
-      </View>
-      <Text style={styles.title}>Preferences</Text>
-      <TouchableOpacity
-        style={styles.completeProfileCard}
-        onPress={() => {
-          setShowLanguage(!showLanguage);
-          if (!showLanguage) {
-            setTempValue(user?.language || LANGUAGES[0]);
-            setShowInterests(false);
-          }
-        }}
-      >
-        <View style={styles.verifyCardInner}>
-          <Ionicons size={24} name="language-outline" color="#eba28a" />
-          <View style={styles.verifyContainer}>
-            <Text style={styles.verifyTitle}>Language</Text>
-            <Text style={styles.verifyDescription}>
-              {user?.language || "Select language"}
-            </Text>
-          </View>
-        </View>
-        <Ionicons
-          size={24}
-          name={showLanguage ? "chevron-up" : "chevron-down"}
-          color="#eba28a"
-        />
-      </TouchableOpacity>
-      {showLanguage && (
-        <View style={styles.completeProfileForm}>
-          {LANGUAGES.map((lang) => (
-            <TouchableOpacity
-              key={lang}
-              onPress={() => setTempValue(lang)}
+          {showPhotoEditor && (
+            <View
               style={[
-                styles.pill,
-                {
-                  backgroundColor: tempValue === lang ? "#eba28a" : "#eee",
-                  marginVertical: 5,
-                },
+                styles.completeProfileForm,
+                { marginHorizontal: 20, marginTop: 8 },
               ]}
             >
-              <Text style={{ color: tempValue === lang ? "#fff" : "#333" }}>
-                {lang}
+              <Text style={[styles.sectionLabel, { marginTop: 0 }]}>
+                My photos
               </Text>
-            </TouchableOpacity>
-          ))}
+              <Text style={[styles.verifyDescription, { marginBottom: 12 }]}>
+                {photoUrls.length} photo{photoUrls.length !== 1 ? "s" : ""}
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                {photoUrls.map((uri, index) => (
+                  <View key={index} style={{ position: "relative" }}>
+                    <Image
+                      source={{ uri }}
+                      style={{ width: 80, height: 80, borderRadius: 8 }}
+                      resizeMode="cover"
+                    />
+                    <View
+                      style={{ flexDirection: "row", marginTop: 4, gap: 4 }}
+                    >
+                      {index > 0 && (
+                        <TouchableOpacity
+                          onPress={() => handleSetPrimaryPhoto(index)}
+                          style={{
+                            padding: 4,
+                            backgroundColor: "#2596be",
+                            borderRadius: 4,
+                          }}
+                        >
+                          <Text style={{ color: "white", fontSize: 10 }}>
+                            Main
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        onPress={() => handleRemovePhoto(index)}
+                        style={{
+                          padding: 4,
+                          backgroundColor: "#FF4C42",
+                          borderRadius: 4,
+                        }}
+                      >
+                        <Text style={{ color: "white", fontSize: 10 }}>
+                          Remove
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    {index === 0 && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: 2,
+                          left: 2,
+                          backgroundColor: "#2596be",
+                          paddingHorizontal: 4,
+                          borderRadius: 4,
+                        }}
+                      >
+                        <Text style={{ color: "white", fontSize: 9 }}>
+                          Main
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+                <TouchableOpacity
+                  onPress={handleAddPhoto}
+                  disabled={savingPhotos}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 8,
+                    backgroundColor: "#eee",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderWidth: 2,
+                    borderStyle: "dashed",
+                    borderColor: "#999",
+                  }}
+                >
+                  <Ionicons name="add" size={32} color="#999" />
+                </TouchableOpacity>
+              </View>
+              {savingPhotos && (
+                <Text style={{ marginTop: 8, color: "#666", fontSize: 12 }}>
+                  Saving...
+                </Text>
+              )}
+            </View>
+          )}
+          {showLanguage && (
+            <View style={{ marginHorizontal: 20, marginTop: 12 }}>
+              <Text style={styles.sectionLabel}>Language</Text>
+              <View style={styles.completeProfileForm}>
+                {LANGUAGES.map((lang) => (
+                  <TouchableOpacity
+                    key={lang}
+                    onPress={() => setTempValue(lang)}
+                    style={[
+                      styles.pill,
+                      {
+                        backgroundColor:
+                          tempValue === lang ? "#eba28a" : "#eee",
+                        marginVertical: 5,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{ color: tempValue === lang ? "#fff" : "#333" }}
+                    >
+                      {lang}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    marginTop: 12,
+                    gap: 12,
+                  }}
+                >
+                  <TouchableOpacity onPress={() => setShowLanguage(false)}>
+                    <Text style={{ color: "#555" }}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        const updated = await updateProfile({
+                          language: tempValue,
+                        });
+                        const auth = await getAuth();
+                        await setAuth(updated, auth.token);
+                        refresh();
+                        setShowLanguage(false);
+                      } catch (err) {
+                        console.error("Failed to save:", err);
+                      }
+                    }}
+                  >
+                    <Text style={{ color: "#eba28a", fontWeight: "bold" }}>
+                      Save
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+          {showInterests && (
+            <View style={{ marginHorizontal: 20, marginTop: 12 }}>
+              <Text style={styles.sectionLabel}>Interests</Text>
+              <View style={styles.completeProfileForm}>
+                {INTERESTS.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    onPress={() => toggleInterest(item)}
+                    style={[
+                      styles.pill,
+                      {
+                        backgroundColor: tempValue.includes(item)
+                          ? "#eba28a"
+                          : "#eee",
+                        marginVertical: 5,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        color: tempValue.includes(item) ? "#fff" : "#333",
+                      }}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    marginTop: 12,
+                    gap: 12,
+                  }}
+                >
+                  <TouchableOpacity onPress={() => setShowInterests(false)}>
+                    <Text style={{ color: "#555" }}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        const updated = await updateProfile({
+                          interests: tempValue,
+                        });
+                        const auth = await getAuth();
+                        await setAuth(updated, auth.token);
+                        refresh();
+                        setShowInterests(false);
+                      } catch (err) {
+                        console.error("Failed to save:", err);
+                      }
+                    }}
+                  >
+                    <Text style={{ color: "#eba28a", fontWeight: "bold" }}>
+                      Save
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+      </LinearGradient>
+
+      <Modal
+        visible={settingsSheetVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSettingsSheetVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+          <TouchableOpacity
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: "rgba(0,0,0,0.35)" },
+            ]}
+            activeOpacity={1}
+            onPress={() => setSettingsSheetVisible(false)}
+          />
           <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "flex-end",
-              marginTop: 12,
-              gap: 12,
-            }}
+            style={[
+              styles.settingsSheet,
+              { paddingBottom: Math.max(insets.bottom, 14) + 8 },
+            ]}
           >
-            <TouchableOpacity onPress={() => setShowLanguage(false)}>
-              <Text style={{ color: "#555" }}>Cancel</Text>
-            </TouchableOpacity>
+            <Text style={styles.settingsSheetTitle}>Settings</Text>
             <TouchableOpacity
-              onPress={async () => {
-                try {
-                  const updated = await updateProfile({ language: tempValue });
-                  const auth = await getAuth();
-                  await setAuth(updated, auth.token);
-                  refresh();
-                  setShowLanguage(false);
-                } catch (err) {
-                  console.error("Failed to save:", err);
-                }
+              style={styles.settingsRow}
+              onPress={() => {
+                setSettingsSheetVisible(false);
+                router.push("/(tabs)/notifications");
               }}
             >
-              <Text style={{ color: "#eba28a", fontWeight: "bold" }}>Save</Text>
+              <Text style={styles.settingsRowLabel}>Notifications</Text>
+              <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsRow}
+              onPress={() => {
+                setSettingsSheetVisible(false);
+                setShowCompleteProfile(true);
+              }}
+            >
+              <Text style={styles.settingsRowLabel}>
+                {profileCompletion < 100
+                  ? "Complete your profile"
+                  : "Edit profile"}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsRow}
+              onPress={() => {
+                setSettingsSheetVisible(false);
+                setShowPhotoEditor(true);
+              }}
+            >
+              <Text style={styles.settingsRowLabel}>My photos</Text>
+              <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsRow}
+              onPress={() => {
+                setSettingsSheetVisible(false);
+                setTempValue(user?.language || LANGUAGES[0]);
+                setShowInterests(false);
+                setShowLanguage(true);
+              }}
+            >
+              <Text style={styles.settingsRowLabel}>Language</Text>
+              <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsRow}
+              onPress={() => {
+                setSettingsSheetVisible(false);
+                setTempValue(user?.interests || []);
+                setShowLanguage(false);
+                setShowInterests(true);
+              }}
+            >
+              <Text style={styles.settingsRowLabel}>Interests</Text>
+              <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsRow}
+              onPress={() => {
+                setSettingsSheetVisible(false);
+                setBookingsSheetVisible(true);
+              }}
+            >
+              <Text style={styles.settingsRowLabel}>My bookings</Text>
+              <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsRow}
+              onPress={() => {
+                setSettingsSheetVisible(false);
+                handleLogout();
+              }}
+            >
+              <Text style={[styles.settingsRowLabel, styles.settingsRowDanger]}>
+                Log out
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
-      )}
-      <TouchableOpacity
-        style={styles.completeProfileCard}
-        onPress={() => {
-          setShowInterests(!showInterests);
-          if (!showInterests) {
-            setTempValue(user?.interests || []);
-            setShowLanguage(false);
-          }
-        }}
+      </Modal>
+
+      <Modal
+        visible={bookingsSheetVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBookingsSheetVisible(false)}
       >
-        <View style={styles.verifyCardInner}>
-          <Ionicons size={24} name="heart-outline" color="#eba28a" />
-          <View style={styles.verifyContainer}>
-            <Text style={styles.verifyTitle}>Interests</Text>
-            <Text style={styles.verifyDescription}>
-              {user?.interests?.length
-                ? user.interests.join(", ")
-                : "Select interests"}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.45)",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 24,
+              padding: 18,
+              maxHeight: "78%",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 12,
+                fontFamily: "Poppins",
+                color: "#111",
+              }}
+            >
+              My bookings
             </Text>
-          </View>
-        </View>
-        <Ionicons
-          size={24}
-          name={showInterests ? "chevron-up" : "chevron-down"}
-          color="#eba28a"
-        />
-      </TouchableOpacity>
-      {showInterests && (
-        <View style={styles.completeProfileForm}>
-          {INTERESTS.map((item) => (
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {bookings?.length > 0 ? (
+                bookings.map((item) => (
+                  <View
+                    key={item._id}
+                    style={[
+                      styles.subscribeCard,
+                      { marginBottom: 10, backgroundColor: "#F5E9DA" },
+                    ]}
+                  >
+                    <View style={styles.subscribeContainer}>
+                      <Text style={[styles.subscribeTitle, { color: "#333" }]}>
+                        {item.event?.title}
+                      </Text>
+                      <Text
+                        style={[styles.subscribeDescription, { color: "#555" }]}
+                      >
+                        {item.event?.location}
+                      </Text>
+                      <Text
+                        style={[styles.subscribeDescription, { color: "#555" }]}
+                      >
+                        {item.event?.date
+                          ? new Date(item.event.date).toLocaleString()
+                          : ""}
+                      </Text>
+                    </View>
+                    {canCancelBooking(item) ? (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setBookingsSheetVisible(false);
+                          handleCancelBooking(item);
+                        }}
+                        style={{
+                          padding: 8,
+                          borderRadius: 8,
+                          backgroundColor: "rgba(255,76,66,0.9)",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "white",
+                            fontFamily: "Poppins",
+                          }}
+                        >
+                          Cancel
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                ))
+              ) : (
+                <Text
+                  style={{
+                    color: "#666",
+                    fontFamily: "Poppins",
+                    marginBottom: 16,
+                  }}
+                >
+                  You have no bookings yet.
+                </Text>
+              )}
+            </ScrollView>
             <TouchableOpacity
-              key={item}
-              onPress={() => toggleInterest(item)}
-              style={[
-                styles.pill,
-                {
-                  backgroundColor: tempValue.includes(item) ? "#eba28a" : "#eee",
-                  marginVertical: 5,
-                },
-              ]}
+              onPress={() => setBookingsSheetVisible(false)}
+              style={{ alignItems: "center", paddingVertical: 12 }}
             >
               <Text
                 style={{
-                  color: tempValue.includes(item) ? "#fff" : "#333",
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: "#E9866E",
+                  fontFamily: "Poppins",
                 }}
               >
-                {item}
+                Close
               </Text>
-            </TouchableOpacity>
-          ))}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "flex-end",
-              marginTop: 12,
-              gap: 12,
-            }}
-          >
-            <TouchableOpacity onPress={() => setShowInterests(false)}>
-              <Text style={{ color: "#555" }}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={async () => {
-                try {
-                  const updated = await updateProfile({ interests: tempValue });
-                  const auth = await getAuth();
-                  await setAuth(updated, auth.token);
-                  refresh();
-                  setShowInterests(false);
-                } catch (err) {
-                  console.error("Failed to save:", err);
-                }
-              }}
-            >
-              <Text style={{ color: "#eba28a", fontWeight: "bold" }}>Save</Text>
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      </Modal>
 
-      <Text style={styles.title}>My Bookings</Text>
-      {bookings?.length > 0 ? (
-        <View style={styles.section}>
-          {bookings.map((item) => (
-            <View key={item._id} style={styles.subscribeCard}>
-              <View style={styles.subscribeContainer}>
-                <Text style={styles.subscribeTitle}>{item.event?.title}</Text>
-                <Text style={styles.subscribeDescription}>
-                  {item.event?.location}
+      <Modal
+        visible={showCityModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCityModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            padding: 24,
+            backgroundColor: "rgba(0,0,0,0.45)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 20,
+              padding: 20,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 12,
+                fontFamily: "Poppins",
+              }}
+            >
+              City
+            </Text>
+            <TextInput
+              value={cityDraft}
+              onChangeText={setCityDraft}
+              placeholder="Your city"
+              placeholderTextColor="#999"
+              style={{
+                borderWidth: 1,
+                borderColor: "#E5E5E5",
+                borderRadius: 14,
+                padding: 14,
+                fontSize: 16,
+                fontFamily: "Poppins",
+                marginBottom: 20,
+              }}
+            />
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                gap: 20,
+              }}
+            >
+              <TouchableOpacity onPress={() => setShowCityModal(false)}>
+                <Text
+                  style={{ fontSize: 16, color: "#666", fontFamily: "Poppins" }}
+                >
+                  Cancel
                 </Text>
-                <Text style={styles.subscribeDescription}>
-                  {item.event?.date
-                    ? new Date(item.event.date).toLocaleString()
-                    : ""}
-                </Text>
-              </View>
-              {canCancelBooking(item) && (
-                <TouchableOpacity
-                  onPress={() => handleCancelBooking(item)}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={saveCity}>
+                <Text
                   style={{
-                    padding: 8,
-                    borderRadius: 8,
-                    backgroundColor: "rgba(255,76,66,0.9)",
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: "#E9866E",
+                    fontFamily: "Poppins",
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: "white",
-                      fontFamily: "Poppins",
-                    }}
-                  >
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-              )}
+                  Save
+                </Text>
+              </TouchableOpacity>
             </View>
-          ))}
+          </View>
         </View>
-      ) : (
-        <Text style={{ color: "#555" }}>You have no bookings yet.</Text>
-      )}
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#FF4C42" }]}
-        onPress={handleLogout}
-      >
-        <Text style={styles.buttonText}>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      </Modal>
     </>
   );
 }

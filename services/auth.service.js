@@ -29,6 +29,20 @@ export const verifyOtp = async (phoneNumber, code) => {
   return data;
 };
 
+/** Normalize OTP verify response to `{ user, token }` when backend signs in an existing account. */
+export const pickSessionFromOtpResponse = (payload) => {
+  if (!payload || typeof payload !== "object") return null;
+  const data =
+    payload.user && (payload.token || payload.accessToken)
+      ? payload
+      : payload.data;
+  if (!data || typeof data !== "object") return null;
+  const token = data.token || data.accessToken || data.jwt;
+  const user = data.user;
+  if (token && user) return { token, user };
+  return null;
+};
+
 export const register = async (payload) => {
   const { data } = await api.post("/auth/register", payload);
   return data;

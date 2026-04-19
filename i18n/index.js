@@ -19,17 +19,25 @@ export const resources = {
         subtitle: "Less Scrolling, More Living",
       },
       intro: {
-        title: "Share Meals and Stories With Amazing New Friends",
-        subtitle:
-          "Enjoy meaningful conversations and delicious meals while connecting with amazing new friends",
-        getStarted: "Get started",
+        welcomeLine1: "Welcome to",
+        welcomeLine2: "Sahbi!",
+        title: "Help us set the table right",
+        subtitle: "A few quick questions to match the right vibe.",
+        getStarted: "Get Started",
         haveAccount: "I already have an account",
-        terms: "By continuing you agree to our Terms and Privacy Policy",
+        termsPrefix: "By continuing you agree to our",
+        termsLink: "Terms",
+        termsMid: "and",
+        privacyLink: "Privacy Policy",
       },
       login: {
-        title: "The better we can match you with compatible people.",
+        title: "The better we can match you with compatible people",
         description:
           "Start building meaningful connections and take the first step towards something amazing.",
+        signInNumber: "Sign in with number",
+        orSignInWith: "Or sign in with",
+        signInEmail: "Sign in with email",
+        hideEmail: "Hide email form",
         email: "Email",
         password: "Password",
         cta: "Login",
@@ -37,6 +45,25 @@ export const resources = {
         noAccount: "Don't have an account? Register",
         forgotPassword: "Forgot password?",
         error: "Login failed",
+        footerPrivacy: "Privacy Policy",
+        footerTerms: "Terms of Service",
+        signInGoogle: "Sign in with Google",
+        signInApple: "Sign in with Apple",
+        phone: {
+          hint: "We'll text you a 6-digit code.",
+          placeholder: "Phone number (incl. country code)",
+          useEmail: "Use email instead",
+          usePhone: "Use phone instead",
+          sendCode: "Send code",
+          sending: "Sending...",
+          verifyContinue: "Verify & continue",
+          verifying: "Verifying...",
+          changeNumber: "Change number",
+          noSession:
+            "We could not sign you in with this code. New here? Create an account.",
+          verifyFailed: "Invalid or expired code. Try again.",
+          sendFailed: "Could not send the code. Check the number and try again.",
+        },
       },
       forgotPassword: {
         title: "Forgot password?",
@@ -91,15 +118,28 @@ export const resources = {
         lastName: "Last Name",
         name: {
           title: "Name",
+          firstNameTitle: "What's your first name?",
+          profileHint1: "This is how it'll appear on your profile.",
+          profileHint2: "Can't change it later",
+        },
+
+        onboarding: {
+          hi: "Hi, Sahbi",
+          stat: "90%",
+          statSub:
+            "of people come to meet new friends and leave with new friends.",
+          skip: "Skip",
         },
 
         birthday: {
-          title: "Birthday",
-          placeholder: "Please select your birthday",
+          title: "Your birthday",
+          hint: "Your profile shows your age, not your birth date.",
+          placeholder: "DD / MM / YYYY",
         },
 
         photos: {
-          title: "Photos",
+          title: "Add your picture",
+          subtitle: "It is necessary to choose 2 images",
           add: "Add a photo",
         },
 
@@ -180,7 +220,7 @@ export const resources = {
           title: "Topics I could talk about for hours",
           food: "Food",
           travel: "Travel",
-          filmTv: "Film/TV",
+          filmTv: "Film/TV & work",
           careerWork: "Career & work",
           personalGrowth: "Personal growth",
           healthFitness: "Health & fitness",
@@ -237,20 +277,26 @@ export const resources = {
         subtitle: "Moins de défilement, plus de vie",
       },
       intro: {
-        title:
-          "Partagez des repas et des histoires avec de nouveaux amis incroyables",
-        subtitle:
-          "Profitez de conversations enrichissantes et de délicieux repas tout en rencontrant de nouveaux amis",
+        welcomeLine1: "Bienvenue sur",
+        welcomeLine2: "Sahbi !",
+        title: "Aidez-nous à bien préparer la table",
+        subtitle: "Quelques questions rapides pour trouver la bonne ambiance.",
         getStarted: "Commencer",
         haveAccount: "J'ai déjà un compte",
-        terms:
-          "En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité",
+        termsPrefix: "En continuant vous acceptez nos",
+        termsLink: "Conditions",
+        termsMid: "et notre",
+        privacyLink: "Politique de confidentialité",
       },
       login: {
         title:
-          "Pour mieux vous mettre en relation avec des personnes compatibles.",
+          "Mieux nous vous connaissons, mieux nous vous mettons en relation",
         description:
-          "Commencez à créer des liens significatifs et faites le premier pas vers quelque chose d'incroyable.",
+          "Créez des liens authentiques et faites le premier pas vers quelque chose de formidable.",
+        signInNumber: "Connexion avec numéro",
+        orSignInWith: "Ou connectez-vous avec",
+        signInEmail: "Connexion avec e-mail",
+        hideEmail: "Masquer le formulaire",
         email: "E-mail",
         password: "Mot de passe",
         cta: "Connexion",
@@ -258,6 +304,25 @@ export const resources = {
         noAccount: "Vous n'avez pas de compte ? Inscrivez-vous",
         forgotPassword: "Mot de passe oublié ?",
         error: "Échec de la connexion",
+        footerPrivacy: "Politique de confidentialité",
+        footerTerms: "Conditions d'utilisation",
+        signInGoogle: "Connexion avec Google",
+        signInApple: "Connexion avec Apple",
+        phone: {
+          hint: "Nous vous enverrons un code à 6 chiffres par SMS.",
+          placeholder: "Numéro (avec indicatif pays)",
+          useEmail: "Utiliser l'e-mail",
+          usePhone: "Utiliser le téléphone",
+          sendCode: "Envoyer le code",
+          sending: "Envoi...",
+          verifyContinue: "Vérifier et continuer",
+          verifying: "Vérification...",
+          changeNumber: "Changer de numéro",
+          noSession:
+            "Connexion impossible avec ce code. Nouveau ? Créez un compte.",
+          verifyFailed: "Code invalide ou expiré. Réessayez.",
+          sendFailed: "Impossible d'envoyer le code. Vérifiez le numéro.",
+        },
       },
       forgotPassword: {
         title: "Mot de passe oublié ?",
@@ -312,15 +377,28 @@ export const resources = {
         lastName: "Nom",
         name: {
           title: "Nom",
+          firstNameTitle: "Quel est votre prénom ?",
+          profileHint1: "C'est ainsi qu'il apparaîtra sur votre profil.",
+          profileHint2: "Vous ne pourrez plus le modifier",
+        },
+
+        onboarding: {
+          hi: "Salut, Sahbi",
+          stat: "90 %",
+          statSub:
+            "des gens viennent pour se faire des amis et repartent avec de nouveaux amis.",
+          skip: "Passer",
         },
 
         birthday: {
-          title: "Date de naissance",
-          placeholder: "Veuillez sélectionner votre date de naissance",
+          title: "Votre date de naissance",
+          hint: "Votre profil affiche votre âge, pas votre date exacte.",
+          placeholder: "JJ / MM / AAAA",
         },
 
         photos: {
-          title: "Photos",
+          title: "Ajoutez votre photo",
+          subtitle: "Il faut choisir 2 images",
           add: "Ajouter une photo",
         },
 
@@ -458,17 +536,25 @@ export const resources = {
         subtitle: "تمرير أقل، حياة أكثر",
       },
       intro: {
-        title: "شارك الوجبات والقصص مع أصدقاء جدد رائعين",
-        subtitle:
-          "استمتع بمحادثات ذات معنى ووجبات لذيذة أثناء التواصل مع أصدقاء جدد رائعين",
-        getStarted: "ابدأ الآن",
+        welcomeLine1: "مرحباً بك في",
+        welcomeLine2: "صاحبي!",
+        title: "خلينا نضبط الطاولة صح",
+        subtitle: "بعض الأسئلة السريعة لنطابق الأجواء المناسبة.",
+        getStarted: "ابدأ",
         haveAccount: "لدي حساب بالفعل",
-        terms: "بالمتابعة، فإنك توافق على الشروط وسياسة الخصوصية الخاصة بنا",
+        termsPrefix: "بالمتابعة فإنك توافق على",
+        termsLink: "الشروط",
+        termsMid: "و",
+        privacyLink: "سياسة الخصوصية",
       },
       login: {
-        title: "لنساعدك في التواصل مع أشخاص متوافقين بشكل أفضل.",
+        title: "كلما عرفناك أكثر، استطعنا ربطك بأشخاص أنسب.",
         description:
-          "ابدأ ببناء علاقات ذات معنى واتخذ الخطوة الأولى نحو شيء رائع.",
+          "ابدأ ببناء علاقات حقيقية واتخذ الخطوة الأولى نحو تجربة مميزة.",
+        signInNumber: "تسجيل الدخول بالرقم",
+        orSignInWith: "أو سجّل الدخول باستخدام",
+        signInEmail: "تسجيل الدخول بالبريد",
+        hideEmail: "إخفاء النموذج",
         email: "البريد الإلكتروني",
         password: "كلمة المرور",
         cta: "تسجيل الدخول",
@@ -476,6 +562,25 @@ export const resources = {
         noAccount: "ليس لديك حساب؟ سجل الآن",
         forgotPassword: "نسيت كلمة المرور؟",
         error: "فشل تسجيل الدخول",
+        footerPrivacy: "سياسة الخصوصية",
+        footerTerms: "شروط الخدمة",
+        signInGoogle: "تسجيل الدخول عبر Google",
+        signInApple: "تسجيل الدخول عبر Apple",
+        phone: {
+          hint: "سنرسل لك رمزاً مكوناً من 6 أرقام عبر رسالة نصية.",
+          placeholder: "رقم الهاتف (مع رمز الدولة)",
+          useEmail: "استخدام البريد الإلكتروني",
+          usePhone: "استخدام الهاتف",
+          sendCode: "إرسال الرمز",
+          sending: "جارٍ الإرسال...",
+          verifyContinue: "تحقق ومتابعة",
+          verifying: "جارٍ التحقق...",
+          changeNumber: "تغيير الرقم",
+          noSession:
+            "تعذر تسجيل الدخول بهذا الرمز. جديد؟ أنشئ حساباً.",
+          verifyFailed: "رمز غير صالح أو منتهي. حاول مرة أخرى.",
+          sendFailed: "تعذر إرسال الرمز. تحقق من الرقم.",
+        },
       },
       forgotPassword: {
         title: "نسيت كلمة المرور؟",
@@ -530,15 +635,28 @@ export const resources = {
         lastName: "الاسم الأخير",
         name: {
           title: "الاسم",
+          firstNameTitle: "ما اسمك الأول؟",
+          profileHint1: "سيظهر هكذا على ملفك الشخصي.",
+          profileHint2: "لا يمكن تغييره لاحقاً",
+        },
+
+        onboarding: {
+          hi: "أهلاً، صاحبي",
+          stat: "90٪",
+          statSub:
+            "من الناس يأتون ليتعرّفوا على أصدقاء جدد ويغادرون بصداقات جديدة.",
+          skip: "تخطي",
         },
 
         birthday: {
-          title: "تاريخ الميلاد",
-          placeholder: "الرجاء اختيار تاريخ ميلادك",
+          title: "تاريخ ميلادك",
+          hint: "يظهر في ملفك عمرك وليس تاريخ الميلاد الكامل.",
+          placeholder: "يوم / شهر / سنة",
         },
 
         photos: {
-          title: "الصور",
+          title: "أضف صورتك",
+          subtitle: "يلزم اختيار صورتين",
           add: "إضافة صورة",
         },
 
@@ -670,13 +788,17 @@ export const resources = {
   },
 };
 
-const deviceLanguage = getRawLanguage().split("-")[0].toLowerCase() || "en";
+const SUPPORTED = ["en", "fr", "ar"];
+const rawLang = getRawLanguage().split("-")[0].toLowerCase() || "en";
+const deviceLanguage = SUPPORTED.includes(rawLang) ? rawLang : "en";
 
-// eslint-disable-next-line import/no-named-as-default-member
-i18n.use(initReactI18next).init({
+/** Resolve this before rendering screens that call `t()` — native init is async. */
+export const i18nInitPromise = i18n.use(initReactI18next).init({
   resources,
   lng: deviceLanguage,
   fallbackLng: "en",
+  supportedLngs: SUPPORTED,
+  nonExplicitSupportedLngs: true,
   compatibilityJSON: "v3",
   interpolation: { escapeValue: false },
 
